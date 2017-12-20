@@ -122,6 +122,20 @@ char *FleaFPGA_Desc[] =
 	"FleaFPGA v2.3",
 	"FleaFPGA v2.2",
 	"FT230X Basic UART",
+	"ULX3S FPGA v1.7",
+	"ULX3S FPGA 45K v1.7",
+};
+
+const int32_t FleaFPGA_Default_Mode = JTAG_FTDI_BITBANG_CBUS_READ; // override with -f -s -u
+int32_t FleaFPGA_Mode[] =
+{
+	JTAG_FTDI_BITBANG_CBUS_READ,
+	JTAG_FTDI_BITBANG_CBUS_READ,
+	JTAG_FTDI_BITBANG_CBUS_READ,
+	JTAG_FTDI_BITBANG_CBUS_READ,
+	JTAG_FTDI_CBUS,
+	JTAG_FTDI_BITBANG,
+	JTAG_FTDI_BITBANG,
 };
 
 int32_t gColumn;
@@ -129,7 +143,7 @@ int32_t gVerbose;
 int32_t gParanoidSafety;
 int32_t gSpecifiedDevice;
 int32_t gAutomatic;
-int32_t gJTAGMode = JTAG_FTDI_BITBANG;
+int32_t gJTAGMode = JTAG_FTDI_BITBANG_CBUS_READ;
 char gKillTitleStrs[256];
 char gRestartPath[256];
 uint8_t in_byte = 0x00;
@@ -138,7 +152,7 @@ const char *FTDIModeName[JTAG_NUM_MODES] =
 {
 	"Test JTAG (no-op but expected input verifies correctly)",
 	"prototype CBUS (CB0=TDI/CB1=TDO/CB2=TMS/CB3=TCK)",
-	"bit-bang write, CBUS read (RTS=TDI/TX=TMS/CTS=TCK/CB1=TDO)"
+	"bit-bang write, CBUS read (RTS=TDI/TX=TMS/CTS=TCK/CB1=TDO)",
 	"bit-bang write and read (RI=TDI/DCD=TMS/DSR=TCK/CTS=TDO)"
 };
 
@@ -889,6 +903,7 @@ int32_t openJTAGDevice(void)
 			}
 		}
 		printf("found %s #%s\n", FleaFPGA_Desc[i], serial_num);
+		gJTAGMode = FleaFPGA_Mode[i];
 		fflush(stdout);
 	}
 	atexit(closeJTAGDevice);

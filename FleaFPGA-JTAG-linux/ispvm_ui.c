@@ -841,6 +841,8 @@ void showHelp(void)
 	printf("               (RTS=TDI, CB1=TDO, TX=TMS, CTS=TCK)\n");
 	printf("  -s        = Prototype board FTDI all CBUS JTAG\n");
 	printf("               (CB0=TDI, CB1=TDO, CB2=TMS, CB3=TCK)\n");
+	printf("  -u        = ULX3S board all bit-bang JTAG\n");
+	printf("               (RI=TDI/DCD=TMS/DSR=TCK/CTS=TDO)\n");
 	printf("  -t        = Test JTAG (fake JTAG with no actual hardware)\n");
 	printf("  -c <path> = Full path to Lattice Diamond Programmer \"ddtcmd.exe\" utility\n");
 	printf("               (used for automatic XCF processing to generate VME JTAG files)\n");
@@ -1097,6 +1099,9 @@ void writeConfig(void)
 				case JTAG_FTDI_BITBANG_CBUS_READ:
 					fprintf(cf, "-f\n");
 					break;
+				case JTAG_FTDI_BITBANG:
+					fprintf(cf, "-u\n");
+					break;
 				default:
 					break;
 			}
@@ -1175,6 +1180,9 @@ void readConfig(void)
 						break;
 					case 'f':
 						gJTAGMode = JTAG_FTDI_BITBANG_CBUS_READ;
+						break;
+					case 'u':
+						gJTAGMode = JTAG_FTDI_BITBANG;
 						break;
 					case 'p':
 						gParanoidSafety = 1;
@@ -1479,6 +1487,9 @@ int main( int argc, char * argv[] )
 					break;
 				case 'f':
 					gJTAGMode = JTAG_FTDI_BITBANG_CBUS_READ;
+					break;
+				case 'u':
+					gJTAGMode = JTAG_FTDI_BITBANG;
 					break;
 				case 'p':
 					gParanoidSafety = !gParanoidSafety;

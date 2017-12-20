@@ -9,10 +9,10 @@
 
 enum
 {
-	JTAG_NONE,						// -t "test"
-	JTAG_FTDI_CBUS,					// -s "slow"
+	JTAG_NONE,			// -t "test"
+	JTAG_FTDI_CBUS,			// -s "slow"
 	JTAG_FTDI_BITBANG_CBUS_READ,	// -n "new"
-	JTAG_FTDI_BITBANG,	// -u "ulx3s"
+	JTAG_FTDI_BITBANG,		// -u "ulx3s"
 	JTAG_NUM_MODES
 };
 
