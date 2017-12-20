@@ -30,7 +30,8 @@
 #include <assert.h>
 
 #include <libusb-1.0/libusb.h>
-#include "ftdi.h"	// libftdi1-1.2 (needed for FT230X) See http://www.intra2net.com/en/developer/libftdi/ (or install Ubuntu libftdi1-dev)
+// #include "ftdi.h"	// libftdi1-1.2 (needed for FT230X) See http://www.intra2net.com/en/developer/libftdi/ (or install Ubuntu libftdi1-dev)
+#include <libftdi1/ftdi.h>
 
 #include "vmopcode.h"
 #include "hardware.h"
@@ -128,7 +129,7 @@ int32_t gVerbose;
 int32_t gParanoidSafety;
 int32_t gSpecifiedDevice;
 int32_t gAutomatic;
-int32_t gJTAGMode = JTAG_FTDI_BITBANG_CBUS_READ;
+int32_t gJTAGMode = JTAG_FTDI_BITBANG;
 char gKillTitleStrs[256];
 char gRestartPath[256];
 uint8_t in_byte = 0x00;
@@ -138,9 +139,11 @@ const char *FTDIModeName[JTAG_NUM_MODES] =
 	"Test JTAG (no-op but expected input verifies correctly)",
 	"prototype CBUS (CB0=TDI/CB1=TDO/CB2=TMS/CB3=TCK)",
 	"bit-bang write, CBUS read (RTS=TDI/TX=TMS/CTS=TCK/CB1=TDO)"
+	"bit-bang write and read (RI=TDI/DCD=TMS/DSR=TCK/CTS=TDO)"
 };
 
 static uint8_t HL[2] = { abbmTCK, 0 };
+static uint8_t HLo[2] = { obbmTCK, 0 };
 
 uint32_t g_TotalTime;
 uint32_t g_JTAGTime;
@@ -193,6 +196,31 @@ void flushPort(void)
 		break;
 
 	case JTAG_FTDI_BITBANG_CBUS_READ:
+		{
+			if (OutputRunCount)
+			{
+				if (last_bitMode != BITMODE_BITBANG)
+				{
+					USBTransactions++;
+					FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
+					last_bitMode = BITMODE_BITBANG;
+				}
+				USBTransactions++;
+				FT_CHECK(written = ftdi_write_data(ftdi, JTAGBuffer, JTAGCount));		// clock -> L -> H -> L
+				if (written != JTAGCount)
+					printf("\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
+
+				NumberClockRuns++;
+				if (LongestRun < OutputRunCount)
+				LongestRun = OutputRunCount;
+
+				JTAGCount = 0;
+				OutputRunCount = 0;
+			}
+		}
+		break;
+
+	case JTAG_FTDI_BITBANG:
 		{
 			if (OutputRunCount)
 			{
@@ -292,6 +320,25 @@ void writePort( uint8_t a_ucPins, uint8_t a_ucValue )
 				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? abbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? abbmTMS : 0);
 				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? abbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? abbmTMS : 0) | abbmTCK;
 				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? abbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? abbmTMS : 0);
+
+				last_siUSBPins = g_siIspPins;
+
+				if (OutputRunCount >= MAX_CLOCK_RUN)
+					flushPort();
+			}
+		}
+		break;
+
+	case JTAG_FTDI_BITBANG:
+		{
+			// rising edge of TCK?
+			if (!(last_siIspPins & g_ucPinTCK) && (g_siIspPins & g_ucPinTCK))
+			{
+				OutputRunCount++;
+
+				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? obbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? obbmTMS : 0);
+				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? obbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? obbmTMS : 0) | obbmTCK;
+				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? obbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? obbmTMS : 0);
 
 				last_siUSBPins = g_siIspPins;
 
@@ -411,6 +458,23 @@ uint8_t readPort(void)
 			USBTransactions++;
 			FT_CHECK(ftdi_read_pins(ftdi, &byte));
 			ucRet = (byte & cbusTDO) ? 0x01 : 0x00;
+		}
+		break;
+
+	case JTAG_FTDI_BITBANG:
+		{
+			TDOToggle++;
+
+			flushPort();
+
+			// this is required to get proper CBUS input (I believe forgets CBUS mode when in async bit-bang)
+			USBTransactions++;
+			// FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));
+			// last_bitMode = BITMODE_CBUS;
+
+			USBTransactions++;
+			FT_CHECK(ftdi_read_pins(ftdi, &byte));
+			ucRet = (byte & obbmTDO) ? 0x01 : 0x00;
 		}
 		break;
 
@@ -598,6 +662,18 @@ void EnableHardware(void)
 
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
 		FT_CHECK(written = ftdi_write_data(ftdi, &HL[1], 1));	// initialize clock to LOW
+		if (written != 1)
+			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+	}
+	if (gJTAGMode == JTAG_FTDI_BITBANG)
+	{
+		if (gParanoidSafety)
+			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE_SLOW));
+		else
+			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
+
+		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
+		FT_CHECK(written = ftdi_write_data(ftdi, &HLo[1], 1));	// initialize clock to LOW
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 	}
@@ -826,6 +902,9 @@ int32_t openJTAGDevice(void)
 	case JTAG_FTDI_BITBANG_CBUS_READ:
 		CBUS_IO = 0;
 		ABBM_IO = abbmTCK|abbmTDI|abbmTMS;
+		break;
+	case JTAG_FTDI_BITBANG:
+		ABBM_IO = obbmTCK|obbmTDI|obbmTMS;
 		break;
 	default:
 		break;

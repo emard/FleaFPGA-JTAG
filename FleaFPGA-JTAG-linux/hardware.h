@@ -12,6 +12,7 @@ enum
 	JTAG_NONE,						// -t "test"
 	JTAG_FTDI_CBUS,					// -s "slow"
 	JTAG_FTDI_BITBANG_CBUS_READ,	// -n "new"
+	JTAG_FTDI_BITBANG,	// -u "ulx3s"
 	JTAG_NUM_MODES
 };
 
@@ -26,6 +27,12 @@ enum
 						// CB1
 #define	abbmTDI		0x4	// RTS
 #define	abbmTCK		0x8 // CTS
+
+// FTDI bit-bang only pins (no CBUS used)
+#define	obbmTMS		0x40	// DCD
+#define	obbmTDO		0x08	// CTS
+#define	obbmTDI		0x80	// RI
+#define	obbmTCK		0x20 	// DSR
 
 extern unsigned int TotalClocks;
 extern unsigned int LongestRun;

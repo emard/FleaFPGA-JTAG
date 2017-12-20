@@ -1,7 +1,8 @@
 # cygwin makefile for FleaFPGA-JTAG utility
 
 CC	= gcc
-CFLAGS	= -m32 -O2 -g -Wall -Wshadow -Wextra `pkg-config --libs --cflags libftdi1`
+CFLAGS	= -O2 -g -Wall -Wshadow -Wextra -lftdi1 -lusb-1.0
+# LDFLAGS = -lftdi1
 #CFLAGS += -DVME_DEBUG 
 
 INC = hardware.h vmopcode.h Makefile
@@ -11,7 +12,7 @@ OBJ = $(SRC:.c=.o)
 .PHONY: all clean
 
 FleaFPGA-JTAG: $(OBJ)
-	$(CC) $^ -o $@ $(CFLAGS)
+	$(CC) $(LDFLAGS) $^ -o $@ $(CFLAGS)
 
 #	strip -S $@
 
