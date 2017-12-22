@@ -843,9 +843,11 @@ void closeJTAGDevice(void)
 	static uint8_t def_handshake = 0x04 | 0x01;
 	if (ftdi != 0)
 	{
+		libusb_set_auto_detach_kernel_driver(ftdi->usb_dev, DONT_DETACH_SIO_MODULE);
 		FT_CHECK(ftdi_set_bitmode(ftdi, def_handshake, BITMODE_BITBANG));	// RTS, TXD = HIGH
-		FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));					// leave all CBUS as inputs
-		ftdi_usb_close(ftdi);
+		FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));			// leave all CBUS as inputs
+		FT_CHECK(ftdi_disable_bitbang(ftdi));
+		FT_CHECK(ftdi_usb_close(ftdi));
 		ftdi_free(ftdi);
 	}
 	ftdi = 0;
