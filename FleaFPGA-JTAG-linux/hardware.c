@@ -122,6 +122,7 @@ char *FleaFPGA_Desc[] =
 	"FleaFPGA v2.3",
 	"FleaFPGA v2.2",
 	"FT230X Basic UART",
+	"FER ULX2S board JTAG / UART",
 	"ULX3S FPGA v1.7",
 	"ULX3S FPGA 25K v1.7",
 	"ULX3S FPGA 45K v1.7",
@@ -135,9 +136,24 @@ int32_t FleaFPGA_Mode[] =
 	JTAG_FTDI_BITBANG_CBUS_READ,
 	JTAG_FTDI_BITBANG_CBUS_READ,
 	JTAG_FTDI_CBUS,
+	JTAG_FTDI_BITBANG2,
 	JTAG_FTDI_BITBANG,
 	JTAG_FTDI_BITBANG,
 	JTAG_FTDI_BITBANG,
+};
+
+// FTDI USB ID map
+int16_t FleaFPGA_ProductID[] =
+{
+	0x6015,
+	0x6015,
+	0x6015,
+	0x6015,
+	0x6015,
+	0x6001,
+	0x6015,
+	0x6015,
+	0x6015,
 };
 
 int32_t gColumn;
@@ -155,11 +171,13 @@ const char *FTDIModeName[JTAG_NUM_MODES] =
 	"Test JTAG (no-op but expected input verifies correctly)",
 	"prototype CBUS (CB0=TDI/CB1=TDO/CB2=TMS/CB3=TCK)",
 	"bit-bang write, CBUS read (RTS=TDI/TX=TMS/CTS=TCK/CB1=TDO)",
+	"bit-bang write and read (CTS=TDI/RI=TMS/DSR=TCK/DCD=TDO)"
 	"bit-bang write and read (RI=TDI/DCD=TMS/DSR=TCK/CTS=TDO)"
 };
 
 static uint8_t HL[2] = { abbmTCK, 0 };
 static uint8_t HLo[2] = { obbmTCK, 0 };
+static uint8_t HLo2[2] = { obbm2TCK, 0 };
 
 uint32_t g_TotalTime;
 uint32_t g_JTAGTime;
@@ -236,6 +254,7 @@ void flushPort(void)
 		}
 		break;
 
+	case JTAG_FTDI_BITBANG2:
 	case JTAG_FTDI_BITBANG:
 		{
 			if (OutputRunCount)
@@ -336,6 +355,25 @@ void writePort( uint8_t a_ucPins, uint8_t a_ucValue )
 				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? abbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? abbmTMS : 0);
 				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? abbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? abbmTMS : 0) | abbmTCK;
 				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? abbmTDI : 0) | (g_siIspPins & g_ucPinTMS ? abbmTMS : 0);
+
+				last_siUSBPins = g_siIspPins;
+
+				if (OutputRunCount >= MAX_CLOCK_RUN)
+					flushPort();
+			}
+		}
+		break;
+
+	case JTAG_FTDI_BITBANG2:
+		{
+			// rising edge of TCK?
+			if (!(last_siIspPins & g_ucPinTCK) && (g_siIspPins & g_ucPinTCK))
+			{
+				OutputRunCount++;
+
+				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? obbm2TDI : 0) | (g_siIspPins & g_ucPinTMS ? obbm2TMS : 0);
+				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? obbm2TDI : 0) | (g_siIspPins & g_ucPinTMS ? obbm2TMS : 0) | obbm2TCK;
+				JTAGBuffer[JTAGCount++] = (g_siIspPins & g_ucPinTDI ? obbm2TDI : 0) | (g_siIspPins & g_ucPinTMS ? obbm2TMS : 0);
 
 				last_siUSBPins = g_siIspPins;
 
@@ -476,6 +514,24 @@ uint8_t readPort(void)
 			ucRet = (byte & cbusTDO) ? 0x01 : 0x00;
 		}
 		break;
+
+	case JTAG_FTDI_BITBANG2:
+		{
+			TDOToggle++;
+
+			flushPort();
+
+			// this is required to get proper CBUS input (I believe forgets CBUS mode when in async bit-bang)
+			USBTransactions++;
+			// FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));
+			// last_bitMode = BITMODE_CBUS;
+
+			USBTransactions++;
+			FT_CHECK(ftdi_read_pins(ftdi, &byte));
+			ucRet = (byte & obbm2TDO) ? 0x01 : 0x00;
+		}
+		break;
+
 
 	case JTAG_FTDI_BITBANG:
 		{
@@ -681,6 +737,20 @@ void EnableHardware(void)
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 	}
+
+	if (gJTAGMode == JTAG_FTDI_BITBANG2)
+	{
+		if (gParanoidSafety)
+			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE_SLOW));
+		else
+			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
+
+		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
+		FT_CHECK(written = ftdi_write_data(ftdi, &HLo2[1], 1));	// initialize clock to LOW
+		if (written != 1)
+			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+	}
+
 	if (gJTAGMode == JTAG_FTDI_BITBANG)
 	{
 		if (gParanoidSafety)
@@ -872,11 +942,11 @@ int32_t openJTAGDevice(void)
 	{
 		if (FleaFPGA_Desc[i][0] == '#')
 		{
-			ftdi_status = ftdi_usb_open_desc(ftdi, 0x0403, 0x6015, NULL, &FleaFPGA_Desc[i][1]);
+			ftdi_status = ftdi_usb_open_desc(ftdi, 0x0403, FleaFPGA_ProductID[i], NULL, &FleaFPGA_Desc[i][1]);
 		}
 		else
 		{
-			ftdi_status = ftdi_usb_open_desc(ftdi, 0x0403, 0x6015, FleaFPGA_Desc[i], NULL);
+			ftdi_status = ftdi_usb_open_desc(ftdi, 0x0403, FleaFPGA_ProductID[i], FleaFPGA_Desc[i], NULL);
 		}
 			
 		if (ftdi_status == FT_OK)
@@ -921,6 +991,9 @@ int32_t openJTAGDevice(void)
 	case JTAG_FTDI_BITBANG_CBUS_READ:
 		CBUS_IO = 0;
 		ABBM_IO = abbmTCK|abbmTDI|abbmTMS;
+		break;
+	case JTAG_FTDI_BITBANG2:
+		ABBM_IO = obbm2TCK|obbm2TDI|obbm2TMS;
 		break;
 	case JTAG_FTDI_BITBANG:
 		ABBM_IO = obbmTCK|obbmTDI|obbmTMS;

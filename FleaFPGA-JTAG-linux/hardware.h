@@ -12,6 +12,7 @@ enum
 	JTAG_NONE,			// -t "test"
 	JTAG_FTDI_CBUS,			// -s "slow"
 	JTAG_FTDI_BITBANG_CBUS_READ,	// -n "new"
+	JTAG_FTDI_BITBANG2,		// -u "ulx2s"
 	JTAG_FTDI_BITBANG,		// -u "ulx3s"
 	JTAG_NUM_MODES
 };
@@ -28,7 +29,13 @@ enum
 #define	abbmTDI		0x4	// RTS
 #define	abbmTCK		0x8 // CTS
 
-// FTDI bit-bang only pins (no CBUS used)
+// FTDI bit-bang only pins ULX2S (no CBUS used)
+#define	obbm2TMS	0x80	// RI
+#define	obbm2TDO	0x40	// DCD
+#define	obbm2TDI	0x08	// CTS
+#define	obbm2TCK	0x20 	// DSR
+
+// FTDI bit-bang only pins ULX3S (no CBUS used)
 #define	obbmTMS		0x40	// DCD
 #define	obbmTDO		0x08	// CTS
 #define	obbmTDI		0x80	// RI
