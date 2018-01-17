@@ -171,7 +171,7 @@ const char *FTDIModeName[JTAG_NUM_MODES] =
 	"Test JTAG (no-op but expected input verifies correctly)",
 	"prototype CBUS (CB0=TDI/CB1=TDO/CB2=TMS/CB3=TCK)",
 	"bit-bang write, CBUS read (RTS=TDI/TX=TMS/CTS=TCK/CB1=TDO)",
-	"bit-bang write and read (CTS=TDI/RI=TMS/DSR=TCK/DCD=TDO)"
+	"bit-bang write and read (CTS=TDI/RI=TMS/DSR=TCK/DCD=TDO)",
 	"bit-bang write and read (RI=TDI/DCD=TMS/DSR=TCK/CTS=TDO)"
 };
 
