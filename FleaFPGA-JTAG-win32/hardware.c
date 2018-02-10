@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "FTD2XX.h"
+#include "ftd2xx.h"
 #include "vmopcode.h"
 #include "hardware.h"
 

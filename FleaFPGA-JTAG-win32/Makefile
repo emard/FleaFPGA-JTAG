@@ -1,14 +1,15 @@
 # cygwin makefile for FleaFPGA-JTAG utility
 
-CC		= i686-pc-mingw32-gcc
-CFLAGS	= -O2 -g -Wall -Wshadow -Wextra
+CC	= i686-w64-mingw32-gcc
+CFLAGS	= -O2 -g -Wall -Wshadow -Wextra -I../
 # CFLAGS += -DVME_DEBUG
 LFLAGS	= -L.
 LIBS	=  ftd2xx.lib -lwinmm -lcomdlg32
 
 INC = hardware.h vmopcode.h ftd2xx.h Makefile
 SRC = ispvm_ui.c ivm_core.c hardware.c
-OBJ = $(SRC:.c=.o) icon.res
+OBJ = $(SRC:.c=.o)
+#OBJ = $(SRC:.c=.o) icon.res
 
 .PHONY: all clean
 

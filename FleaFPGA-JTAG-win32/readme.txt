@@ -1,3 +1,9 @@
+To compile this, install mingw32 compiler,
+download FTDI driver for windows
+http://www.ftdichip.com/Drivers/D2XX.htm
+and unzip it under /tmp/ftdi
+
+
 FleaFPGA-JTAG utility
 Based on Lattice ispVME software. Copyright 2008 Lattice Semiconductor Corp.  See license.txt file.
 ----------------------------
