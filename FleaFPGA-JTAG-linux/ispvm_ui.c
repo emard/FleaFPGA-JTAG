@@ -43,7 +43,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #if defined(WIN32)
 #include "windows.h"
@@ -52,6 +51,7 @@
 
 //#define stat(path, buffer) _stat(path, buffer)
 #elif defined(__linux__)
+#include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>	
@@ -800,7 +800,7 @@ void quitmsg(void)
 #if defined(WIN32)
 	if (gRetCode >= 0 && gRetCode != 0xc0de && gRestartPath[0])
 	{
-		RestartApp();
+		// RestartApp();
 	}
 #endif
 	
@@ -1394,7 +1394,9 @@ int ProcessFile(char *filename)
 int main( int argc, char * argv[] )
 {
 	int i  = 0;
-
+#if defined(WIN32)
+	int did_file = 0;
+#endif
 	g_TotalTime = getMilliseconds(0);
 	
 	setvbuf(stdout, NULL, _IONBF, 0);
@@ -1562,7 +1564,9 @@ int main( int argc, char * argv[] )
 		{
 			strcpy( szCommandLineArg, argv[ i ] );
 		}
-
+#if defined(WIN32)
+		did_file = 1;
+#endif
 		gRetCode = ProcessFile(szCommandLineArg);
 		
 		if (gRetCode < 0)

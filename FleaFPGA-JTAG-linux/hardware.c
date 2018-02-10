@@ -19,8 +19,18 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <conio.h>
-#else
+#include "ftdi_compat_win32.h"
+#include "ftd2xx.h"
+#endif
+
+#if defined(__linux__)
+#include <libusb-1.0/libusb.h>
+// #include "ftdi.h"	// libftdi1-1.2 (needed for FT230X) See http://www.intra2net.com/en/developer/libftdi/ (or install Ubuntu libftdi1-dev)
+#include <libftdi1/ftdi.h>
 #include <unistd.h>
+#include "ftdi_compat_linux.h"
+typedef int FT_STATUS;
+typedef struct ftdi_context* FT_HANDLE;
 #endif
 
 #include <stdlib.h>
@@ -29,9 +39,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <libusb-1.0/libusb.h>
-// #include "ftdi.h"	// libftdi1-1.2 (needed for FT230X) See http://www.intra2net.com/en/developer/libftdi/ (or install Ubuntu libftdi1-dev)
-#include <libftdi1/ftdi.h>
 
 #include "vmopcode.h"
 #include "hardware.h"
@@ -40,7 +47,6 @@
 
 #define STR1(x) #x
 #define STR(x) STR1(x)
-#define	FT_CHECK(x)	(ftdi_status = (x), (ftdi_status >= 0 ? 0 : printf("FTDI: %s returned %d in %s:%d: %s\n", STR(x), (int32_t)ftdi_status, __FUNCTION__, __LINE__, ftdi_get_error_string(ftdi))), ftdi_status)
 
 /********************************************************************************
 * Declaration of global variables 
@@ -86,8 +92,6 @@ void calibration(void);
 
 //extern void ispVMStateMachine( char a_cNextState );
 
-typedef int FT_STATUS;
-typedef struct ftdi_context* FT_HANDLE;
 
 FT_STATUS	ftdi_status;
 FT_HANDLE	ftdi;
@@ -185,8 +189,12 @@ uint32_t g_JTAGTime;
 uint32_t getMilliseconds(uint32_t start)
 {
 	struct timeval now;
+#if defined(__linux__)
 	gettimeofday(&now, NULL);
-
+#endif
+#if defined(WIN32)
+	mingw_gettimeofday(&now, NULL);
+#endif
 	uint32_t nowms = (now.tv_sec * 1000) + (now.tv_usec / 1000);
 	uint32_t ms = (nowms - start);
 
@@ -240,7 +248,7 @@ void flushPort(void)
 					last_bitMode = BITMODE_BITBANG;
 				}
 				USBTransactions++;
-				FT_CHECK(written = ftdi_write_data(ftdi, JTAGBuffer, JTAGCount));		// clock -> L -> H -> L
+				FT_CHECK_WRITE(ftdi, JTAGBuffer, JTAGCount, written);		// clock -> L -> H -> L
 				if (written != JTAGCount)
 					printf("\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
 
@@ -266,7 +274,8 @@ void flushPort(void)
 					last_bitMode = BITMODE_BITBANG;
 				}
 				USBTransactions++;
-				FT_CHECK(written = ftdi_write_data(ftdi, JTAGBuffer, JTAGCount));		// clock -> L -> H -> L
+				//FT_CHECK(written = ftdi_write_data(ftdi, JTAGBuffer, JTAGCount));		// clock -> L -> H -> L
+				FT_CHECK_WRITE(ftdi, JTAGBuffer, JTAGCount, written);
 				if (written != JTAGCount)
 					printf("\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
 
@@ -733,7 +742,8 @@ void EnableHardware(void)
 			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
 
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		FT_CHECK(written = ftdi_write_data(ftdi, &HL[1], 1));	// initialize clock to LOW
+		// FT_CHECK(written = ftdi_write_data(ftdi, &HL[1], 1));	// initialize clock to LOW
+		FT_CHECK_WRITE(ftdi, &HL[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 	}
@@ -746,7 +756,8 @@ void EnableHardware(void)
 			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
 
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		FT_CHECK(written = ftdi_write_data(ftdi, &HLo2[1], 1));	// initialize clock to LOW
+		//FT_CHECK(written = ftdi_write_data(ftdi, &HLo2[1], 1));	// initialize clock to LOW
+		FT_CHECK_WRITE(ftdi, &HLo2[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 	}
@@ -759,7 +770,8 @@ void EnableHardware(void)
 			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
 
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		FT_CHECK(written = ftdi_write_data(ftdi, &HLo[1], 1));	// initialize clock to LOW
+		// FT_CHECK(written = ftdi_write_data(ftdi, &HLo[1], 1));	// initialize clock to LOW
+		FT_CHECK_WRITE(ftdi, &HLo[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 	}
@@ -796,7 +808,8 @@ void DisableHardware(void)
 	if (gJTAGMode != JTAG_NONE)
 	{
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		FT_CHECK(written = ftdi_write_data(ftdi, &HL[1], 1));
+		//FT_CHECK(written = ftdi_write_data(ftdi, &HL[1], 1));
+		FT_CHECK_WRITE(ftdi, &HL[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));	// leave all as inputs
@@ -820,6 +833,7 @@ void DisableHardware(void)
 *                                                            *
 *************************************************************/
 
+#if defined(__linux__)
 void ListDevices(void)
 {
 	static const char *FTDI_Type[] =
@@ -835,8 +849,8 @@ void ListDevices(void)
 	};
 
 	int32_t	num_devices = 0;
-	struct ftdi_device_list	*devlist = NULL;
-	struct ftdi_device_list	*dev_info = NULL;
+	FT_STRUCT_DEVLIST *devlist = NULL;
+	FT_STRUCT_DEVLIST *dev_info = NULL;
 	int32_t i;
 
 	if ((ftdi = ftdi_new()) == 0)
@@ -846,14 +860,16 @@ void ListDevices(void)
 	}
 
 	printf("Available FTDI devices:  (with * next to possible FleaFPGA devices)\n");
-	FT_CHECK(num_devices = ftdi_usb_find_all(ftdi, &devlist, 0, 0));
-
+	// FT_CHECK(num_devices = ftdi_usb_find_all(ftdi, &devlist, 0, 0));
+	FT_CHECK_DEVLIST(num_devices, ftdi, devlist);
+	
 	if (ftdi_status < 0)
 	{
 		printf("\nError: Can't list devices (error %d:%s)\n", ftdi_status, ftdi_get_error_string(ftdi));
 		return;
 	}
 
+        #if defined(__linux__)
 	if (num_devices != 0)
 	{
 		for (i = 0, dev_info = devlist; i < num_devices && dev_info != NULL; i++, dev_info = dev_info->next)
@@ -906,10 +922,91 @@ void ListDevices(void)
 		ftdi_free(ftdi);
 		ftdi = NULL;
 	}
+	#endif
+
+        #if defined(WIN32)
+	for (i = 0; i < num_devices; i++)
+	{
+		printf(" %c%2d %s - %-40.40s #%s\n", dev_info[i].Type == FT_DEVICE_X_SERIES ? '*' : ' ', i,
+			dev_info[i].Type <= FT_DEVICE_X_SERIES ? FTDI_Type[dev_info[i].Type] : "FTDI-??   ", 
+			dev_info[i].Description, 
+			dev_info[i].SerialNumber); 
+	}
+	printf("\n");
+	#endif
 }
+#endif
+
+#if defined(WIN32)
+void ListDevices(void)
+{
+	static const char *FTDI_Type[] =
+	{
+		"FTDI-BM   ",
+		"FTDI-AM   ",
+		"FTDI-100AX",
+		"FTDI-?    ",
+		"FTDI-2232C",
+		"FTDI-232R ",
+		"FTDI-2232H",
+		"FTDI-4232H",
+		"FTDI-232H ",
+		"FTDI-X    "
+	};
+
+	DWORD	num_devices = 0;
+	FT_DEVICE_LIST_INFO_NODE *dev_info;
+	uint32_t i;
+
+	if (gKillTitleStrs[0])
+	{
+		// TerminateApp();
+	}
+
+	printf("Available FTDI devices:  (with * next to possible FleaFPGA devices)\n");
+	FT_CHECK(FT_CreateDeviceInfoList(&num_devices));
+
+	if (ftdi_status != FT_OK)
+	{
+		printf("\nError: Can't list devices (error #%d)\n", (int) ftdi_status);
+		return;
+	}
+
+	if (num_devices == 0)
+	{
+		printf(" (no devices found)\n");
+		return;
+	}
+
+	dev_info = (FT_DEVICE_LIST_INFO_NODE*) malloc(num_devices * sizeof (FT_DEVICE_LIST_INFO_NODE));
+
+	if (!dev_info)
+	{
+		printf("\nError: Can't allocate memory for %d devices.\n", (int) num_devices);
+		return;
+	}
+
+	FT_CHECK(FT_GetDeviceInfoList(dev_info, &num_devices));
+	if (ftdi_status != FT_OK)
+	{
+		printf("\nError: Get get device list (error #%d)\n", (int) ftdi_status);
+		return;
+	}
+
+	for (i = 0; i < num_devices; i++)
+	{
+		printf(" %c%2d %s - %-40.40s #%s\n", dev_info[i].Type == FT_DEVICE_X_SERIES ? '*' : ' ', i,
+			dev_info[i].Type <= FT_DEVICE_X_SERIES ? FTDI_Type[dev_info[i].Type] : "FTDI-??   ", 
+			dev_info[i].Description, 
+			dev_info[i].SerialNumber); 
+	}
+	printf("\n");
+}
+#endif
 
 void closeJTAGDevice(void)
 {
+        #if defined(__linux__)
 	static uint8_t def_handshake = 0x04 | 0x01;
 	if (ftdi != 0)
 	{
@@ -921,10 +1018,30 @@ void closeJTAGDevice(void)
 		ftdi_free(ftdi);
 	}
 	ftdi = 0;
+	#endif
+
+        #if defined(WIN32)
+	static uint8_t def_handshake = 0x04 | 0x01;
+	if (ftdi != 0)
+	{
+		FT_CHECK(FT_SetBitMode(ftdi, ABBM_IO, FT_BITMODE_ASYNC_BITBANG));
+		FT_CHECK(FT_Write(ftdi, &def_handshake, 1, &written));
+		if (written != 1)
+			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+		FT_CHECK(FT_SetBitMode(ftdi, 0, FT_BITMODE_CBUS_BITBANG));	// leave all as inputs
+
+		Sleep(1);
+		FT_CHECK(FT_ResetPort(ftdi));
+
+		FT_Close(ftdi);
+	}
+	ftdi = 0;
+	#endif
 }
 
 int32_t openJTAGDevice(void)
 {
+        #if defined(__linux__)
 	uint32_t i = 0;
 
 	if (gJTAGMode == JTAG_NONE)
@@ -981,6 +1098,52 @@ int32_t openJTAGDevice(void)
 		fflush(stdout);
 	}
 	atexit(closeJTAGDevice);
+	#endif
+
+        #if defined(WIN32)
+	uint32_t i = 0;
+
+	if (gJTAGMode == JTAG_NONE)
+		return 0;
+
+	if (gKillTitleStrs[0])
+	{
+		// TerminateApp();
+	}
+		
+	printf("Searching for FleaFPGA...");
+	fflush(stdout);
+	for (i = 0; i < (gSpecifiedDevice ?  1 : sizeof (FleaFPGA_Desc) / sizeof (FleaFPGA_Desc[0])); i++)
+	{
+		if (FleaFPGA_Desc[i][0] == '#')
+			ftdi_status = FT_OpenEx(&FleaFPGA_Desc[i][1], FT_OPEN_BY_SERIAL_NUMBER, &ftdi);
+		else
+			ftdi_status = FT_OpenEx(FleaFPGA_Desc[i], FT_OPEN_BY_DESCRIPTION, &ftdi);
+		if (ftdi_status == FT_OK)
+		{
+			break;
+		}
+	}
+
+	if (ftdi_status != FT_OK || ftdi == 0)
+	{
+		printf("not found (see -m or -l option).\n");
+		return -1;
+	}
+
+	printf("found %s\n", FleaFPGA_Desc[i]);
+	fflush(stdout);
+	atexit(closeJTAGDevice);
+
+	if (FT_ResetPort(ftdi) != FT_OK)
+	{
+		closeJTAGDevice();
+		printf("FTDI ResetPort failed: Check cable, connection and FTDI driver.\n");
+		return -1;
+	}
+
+	uint8_t testpins = 0;
+	#endif
 
 	switch (gJTAGMode)
 	{
