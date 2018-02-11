@@ -13,7 +13,7 @@ OBJ = $(SRC:.c=.o)
 
 .PHONY: all clean
 
-FleaFPGA-JTAG: $(OBJ)
+FleaFPGA-JTAG.exe: $(OBJ)
 	$(CC) $(LFLAGS) $^ $(LIBS) -o $@
 	strip -S $@
 
