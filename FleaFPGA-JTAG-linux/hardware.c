@@ -183,10 +183,11 @@ static uint8_t HL[2] = { abbmTCK, 0 };
 static uint8_t HLo[2] = { obbmTCK, 0 };
 static uint8_t HLo2[2] = { obbm2TCK, 0 };
 
-uint32_t g_TotalTime;
-uint32_t g_JTAGTime;
+int32_t g_TotalTime;
+int32_t g_JTAGTime;
 
-uint32_t getMilliseconds(uint32_t start)
+#if defined(__linux__)
+int32_t getMilliseconds(int32_t start)
 {
 	struct timeval now;
 #if defined(__linux__)
@@ -195,14 +196,30 @@ uint32_t getMilliseconds(uint32_t start)
 #if defined(WIN32)
 	mingw_gettimeofday(&now, NULL);
 #endif
-	uint32_t nowms = (now.tv_sec * 1000) + (now.tv_usec / 1000);
-	uint32_t ms = (nowms - start);
+	int32_t nowms = (now.tv_sec * 1000) + (now.tv_usec / 1000);
+	int32_t ms = (nowms - start);
 
 	if (ms == 0)
 		ms = 1;	// avoid divide by zero
 
 	return ms;
 }
+#endif
+
+#if defined(WIN32)
+int32_t getMilliseconds(int32_t start)
+{
+	int32_t ms;
+	int32_t now;
+	now = timeGetTime();
+	ms = (now - start);
+
+	if (ms == 0)
+	ms = 1;	// avoid divide by zero
+
+	return ms;
+}
+#endif
 
 //******************
 //Source
