@@ -1132,6 +1132,7 @@ int32_t openJTAGDevice(void)
 	}
 
 	printf("found %s\n", FleaFPGA_Desc[i]);
+	gJTAGMode = FleaFPGA_Mode[i];
 	fflush(stdout);
 	atexit(closeJTAGDevice);
 
