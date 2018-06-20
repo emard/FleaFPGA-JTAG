@@ -639,6 +639,7 @@ void sclock(void)
 * Users only need to enter the speed of the CPU.
 *
 **********************************************************************************/
+#if defined(__linux__)
 void ispVMDelay( uint16_t a_usTimeDelay )
 {
 	flushPort();
@@ -667,6 +668,44 @@ void ispVMDelay( uint16_t a_usTimeDelay )
 		usleep(delay);
 	}
 }
+#endif
+
+#if defined(WIN32)
+void ispVMDelay( uint16_t a_usTimeDelay )
+{
+	flushPort();
+
+	if (gJTAGMode == JTAG_NONE)
+		return;
+
+	if ( a_usTimeDelay & 0x8000 ) /*Test for unit*/
+	{
+		a_usTimeDelay &= ~0x8000; /*unit in milliseconds*/
+	}
+	else { /*unit in microseconds*/
+		a_usTimeDelay = (uint16_t) (a_usTimeDelay/1000); /*convert to milliseconds*/
+	}
+
+	if (gParanoidSafety)		// USB JTAG will typically always introduce enough delay
+	{
+		if ( a_usTimeDelay <= 0 ) {
+			a_usTimeDelay = 1; /*delay is 1 millisecond minimum*/
+		}
+	}
+	else
+	{
+		if (a_usTimeDelay > 100)
+			a_usTimeDelay = 100;
+		else if (a_usTimeDelay > 0)
+			a_usTimeDelay -= 1;
+	}
+
+	if (a_usTimeDelay)
+	{
+		Sleep(a_usTimeDelay);
+	}
+}
+#endif
 
 /*********************************************************************************
 *
@@ -732,10 +771,10 @@ void EnableHardware(void)
 	last_clocks = 0;
 	last_ms = 0;
 
-	#if defined(WIN32)
-	FT_CHECK(ftdi_set_latency_timer(ftdi, FTDI_LATENCY_MS));
-	FT_CHECK(ftdi_set_usb_parameters(ftdi, FTDI_BUF_SIZE, FTDI_BUF_SIZE));
-	#endif
+	//#if defined(WIN32)
+	//FT_CHECK(ftdi_set_latency_timer(ftdi, FTDI_LATENCY_MS));
+	//FT_CHECK(ftdi_set_usb_parameters(ftdi, FTDI_BUF_SIZE, FTDI_BUF_SIZE));
+	//#endif
 
 	if (gJTAGMode == JTAG_FTDI_BITBANG_CBUS_READ)
 	{
@@ -751,6 +790,7 @@ void EnableHardware(void)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		FT_CHECK(ftdi_set_bitmode(ftdi, CBUS_IO, BITMODE_CBUS));
 		last_bitMode = BITMODE_CBUS;
+		return;
 	}
 
 	if (gJTAGMode == JTAG_FTDI_BITBANG2)
@@ -765,6 +805,7 @@ void EnableHardware(void)
 		FT_CHECK_WRITE(ftdi, &HLo2[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+		return;
 	}
 
 	if (gJTAGMode == JTAG_FTDI_BITBANG)
@@ -779,8 +820,10 @@ void EnableHardware(void)
 		FT_CHECK_WRITE(ftdi, &HLo[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+		return;
 	}
-
+	FT_CHECK(ftdi_set_bitmode(ftdi, CBUS_IO, BITMODE_CBUS));
+	last_bitMode = BITMODE_CBUS;
 }
 
 /*************************************************************
