@@ -1,5 +1,18 @@
 FleaFPGA-JTAG utility
 Based on Lattice ispVME software. Copyright 2008 Lattice Semiconductor Corp.  See license.txt file.
+
+From linux this can build executables for both linux and windows.
+
+For linux:
+
+    make clean
+    make -f Makefile.linux
+
+For windows (needs ftdi d2xx unzipped to /tmp/ftdi):
+
+    make clean
+    make -f Makefile.win32
+
 ----------------------------
 
 For a full tutorial, please see the FleaFPGA Quickstart Guide for your FleaFPGA board.
