@@ -1,5 +1,9 @@
 # cygwin makefile for FleaFPGA-JTAG utility
 
+# FTDI D2XX drivers are required:
+# cd /tmp/ftdi
+# unzip '/tmp/CDM v2.12.28 WHQL Certified.zip'
+
 CC	= i686-w64-mingw32-gcc
 CFLAGS	= -O2 -g -Wall -Wshadow -Wextra -I../
 # CFLAGS += -DVME_DEBUG
