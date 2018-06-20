@@ -21,4 +21,4 @@ $(OBJ): $(INC)
 all: clean FleaFPGA-JTAG
 
 clean:
-	rm -f ./FleaFPGA-JTAG *.o
+	rm -f ./FleaFPGA-JTAG *.o *~
