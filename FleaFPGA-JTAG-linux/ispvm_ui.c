@@ -406,6 +406,7 @@ void ispVMMemManager( signed char cTarget, unsigned short usSize )
 		}
 		g_pucInData = ( unsigned char * ) malloc( usSize / 8 + 2 );
 		g_usPreviousSize = usSize;
+		break;
 	case XTDO:
 	case TDO:
 		if ( g_pucOutData!= NULL )
@@ -1141,7 +1142,7 @@ void readConfig(void)
 
 	sprintf(config_file, "%s/.FleaFPGA-JTAG-settings.cfg", userprofile);
 
-#warning linux TODO ddtcmd
+// #warning linux TODO ddtcmd
 #endif
 	
 	if ((cf = fopen(config_file, "rt")) != NULL)
@@ -1357,9 +1358,9 @@ int ProcessFile(char *filename)
 		SetGreenText();
 		printf("+==========================================+\n" );
 		if (orig_op_str[0])
-			printf("|%*.s%s%*s|\n", (42 - strlen(orig_op_str))/2, " ", orig_op_str, (42 - strlen(orig_op_str)+1)/2, " ");
+			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(orig_op_str))/2), " ", orig_op_str, (int) ((42 - strlen(orig_op_str)+1)/2), " ");
 		else
-			printf("|%*.s%s%*s|\n", (42 - strlen(generic_op_msg))/2, " ", generic_op_msg, (42 - strlen(generic_op_msg)+1)/2, " ");
+			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(generic_op_msg))/2), " ", generic_op_msg, (int) ((42 - strlen(generic_op_msg)+1)/2), " ");
 
 		printf("|               SUCCESSFUL!                |\n" );
 		printf("+==========================================+\n\n" );
@@ -1549,10 +1550,12 @@ int main( int argc, char * argv[] )
 						InitFleaFPGA();
 						break;
 					}
+					// fall-thru
 				default:
 					SetRedText();
 					printf("\nError: Unrecognised option '%c'\n", argv[i][1]);
 					SetNormalText();
+					// fall-thru
 				case '?':
 					showHelp();
 					exit(1);
@@ -1594,9 +1597,9 @@ int main( int argc, char * argv[] )
 		printf( "\n");
 		printf("+==========================================+\n" );
 		if (orig_op_str[0])
-			printf("|%*.s%s%*s|\n", (42 - strlen(orig_op_str))/2, " ", orig_op_str, (42 - strlen(orig_op_str)+1)/2, " ");
+			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(orig_op_str))/2), " ", orig_op_str, (int) ((42 - strlen(orig_op_str)+1)/2), " ");
 		else
-			printf("|%*.s%s%*s|\n", (42 - strlen(generic_op_msg))/2, " ", generic_op_msg, (42 - strlen(generic_op_msg)+1)/2, " ");
+			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(generic_op_msg))/2), " ", generic_op_msg, (int) ((42 - strlen(generic_op_msg)+1)/2), " ");
 		printf("|                  FAILED!                 |\n" );
 		printf("+==========================================+\n\n" );
 		printf( "Error: %s\n\n", szCommandLineArg );

@@ -96,8 +96,8 @@ void calibration(void);
 FT_STATUS	ftdi_status;
 FT_HANDLE	ftdi;
 
-int32_t	CBUS_IO;
-int32_t ABBM_IO;
+int32_t	CBUS_IO = 0;
+int32_t ABBM_IO = 0;
 
 static int32_t last_secs;
 static int32_t last_clocks;
@@ -113,7 +113,7 @@ uint32_t NumberClockRuns;
 uint32_t TotalClocks;
 uint32_t ClockUpdateFlush;
 int32_t	TDOToggle;
-uint32_t written;
+long unsigned int written;
 int32_t line_open;
 uint8_t JTAGBuffer[MAX_CLOCK_RUN*4];
 uint32_t  JTAGCount;
@@ -160,11 +160,11 @@ int16_t FleaFPGA_ProductID[] =
 	0x6015,
 };
 
-int32_t gColumn;
-int32_t gVerbose;
-int32_t gParanoidSafety;
-int32_t gSpecifiedDevice;
-int32_t gAutomatic;
+int32_t gColumn = 0;
+int32_t gVerbose = 0;
+int32_t gParanoidSafety = 0;
+int32_t gSpecifiedDevice = 0;
+int32_t gAutomatic = 0;
 int32_t gJTAGMode = JTAG_FTDI_BITBANG_CBUS_READ;
 char gKillTitleStrs[256];
 char gRestartPath[256];
@@ -291,7 +291,6 @@ void flushPort(void)
 					last_bitMode = BITMODE_BITBANG;
 				}
 				USBTransactions++;
-				//FT_CHECK(written = ftdi_write_data(ftdi, JTAGBuffer, JTAGCount));		// clock -> L -> H -> L
 				FT_CHECK_WRITE(ftdi, JTAGBuffer, JTAGCount, written);
 				if (written != JTAGCount)
 					printf("\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
@@ -517,7 +516,6 @@ uint8_t readPort(void)
 	case JTAG_FTDI_CBUS:
 		{
 			flushPort();
-
 			USBTransactions++;
 			FT_CHECK(ftdi_read_pins(ftdi, &byte));
 			ucRet = (byte & cbusTDO) ? 0x01 : 0x00;
@@ -527,14 +525,11 @@ uint8_t readPort(void)
 	case JTAG_FTDI_BITBANG_CBUS_READ:
 		{
 			TDOToggle++;
-
 			flushPort();
-
 			// this is required to get proper CBUS input (I believe forgets CBUS mode when in async bit-bang)
 			USBTransactions++;
 			FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));
 			last_bitMode = BITMODE_CBUS;
-
 			USBTransactions++;
 			FT_CHECK(ftdi_read_pins(ftdi, &byte));
 			ucRet = (byte & cbusTDO) ? 0x01 : 0x00;
@@ -544,14 +539,7 @@ uint8_t readPort(void)
 	case JTAG_FTDI_BITBANG2:
 		{
 			TDOToggle++;
-
 			flushPort();
-
-			// this is required to get proper CBUS input (I believe forgets CBUS mode when in async bit-bang)
-			USBTransactions++;
-			// FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));
-			// last_bitMode = BITMODE_CBUS;
-
 			USBTransactions++;
 			FT_CHECK(ftdi_read_pins(ftdi, &byte));
 			ucRet = (byte & obbm2TDO) ? 0x01 : 0x00;
@@ -562,14 +550,7 @@ uint8_t readPort(void)
 	case JTAG_FTDI_BITBANG:
 		{
 			TDOToggle++;
-
 			flushPort();
-
-			// this is required to get proper CBUS input (I believe forgets CBUS mode when in async bit-bang)
-			USBTransactions++;
-			// FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));
-			// last_bitMode = BITMODE_CBUS;
-
 			USBTransactions++;
 			FT_CHECK(ftdi_read_pins(ftdi, &byte));
 			ucRet = (byte & obbmTDO) ? 0x01 : 0x00;
@@ -751,6 +732,11 @@ void EnableHardware(void)
 	last_clocks = 0;
 	last_ms = 0;
 
+	#if defined(WIN32)
+	FT_CHECK(ftdi_set_latency_timer(ftdi, FTDI_LATENCY_MS));
+	FT_CHECK(ftdi_set_usb_parameters(ftdi, FTDI_BUF_SIZE, FTDI_BUF_SIZE));
+	#endif
+
 	if (gJTAGMode == JTAG_FTDI_BITBANG_CBUS_READ)
 	{
 		if (gParanoidSafety)
@@ -759,10 +745,12 @@ void EnableHardware(void)
 			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
 
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		// FT_CHECK(written = ftdi_write_data(ftdi, &HL[1], 1));	// initialize clock to LOW
+		last_bitMode = BITMODE_BITBANG;
 		FT_CHECK_WRITE(ftdi, &HL[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+		FT_CHECK(ftdi_set_bitmode(ftdi, CBUS_IO, BITMODE_CBUS));
+		last_bitMode = BITMODE_CBUS;
 	}
 
 	if (gJTAGMode == JTAG_FTDI_BITBANG2)
@@ -773,7 +761,7 @@ void EnableHardware(void)
 			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
 
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		//FT_CHECK(written = ftdi_write_data(ftdi, &HLo2[1], 1));	// initialize clock to LOW
+		last_bitMode = BITMODE_BITBANG;
 		FT_CHECK_WRITE(ftdi, &HLo2[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
@@ -787,17 +775,12 @@ void EnableHardware(void)
 			FT_CHECK(ftdi_set_baudrate(ftdi, ASYNC_BB_RATE));
 
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		// FT_CHECK(written = ftdi_write_data(ftdi, &HLo[1], 1));	// initialize clock to LOW
+		last_bitMode = BITMODE_BITBANG;
 		FT_CHECK_WRITE(ftdi, &HLo[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 	}
 
-	if (gJTAGMode != JTAG_NONE)
-	{
-		FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));
-		last_bitMode = BITMODE_CBUS;
-	}
 }
 
 /*************************************************************
@@ -825,7 +808,6 @@ void DisableHardware(void)
 	if (gJTAGMode != JTAG_NONE)
 	{
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
-		//FT_CHECK(written = ftdi_write_data(ftdi, &HL[1], 1));
 		FT_CHECK_WRITE(ftdi, &HL[1], 1, written);
 		if (written != 1)
 			printf("%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
@@ -1042,14 +1024,12 @@ void closeJTAGDevice(void)
 	if (ftdi != 0)
 	{
 		FT_CHECK(FT_SetBitMode(ftdi, ABBM_IO, FT_BITMODE_ASYNC_BITBANG));
-		FT_CHECK(FT_Write(ftdi, &def_handshake, 1, &written));
+		FT_CHECK_WRITE(ftdi, &def_handshake, 1, written);
 		if (written != 1)
 			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		FT_CHECK(FT_SetBitMode(ftdi, 0, FT_BITMODE_CBUS_BITBANG));	// leave all as inputs
-
 		Sleep(1);
 		FT_CHECK(FT_ResetPort(ftdi));
-
 		FT_Close(ftdi);
 	}
 	ftdi = 0;
@@ -1137,9 +1117,7 @@ int32_t openJTAGDevice(void)
 		else
 			ftdi_status = FT_OpenEx(FleaFPGA_Desc[i], FT_OPEN_BY_DESCRIPTION, &ftdi);
 		if (ftdi_status == FT_OK)
-		{
 			break;
-		}
 	}
 
 	if (ftdi_status != FT_OK || ftdi == 0)
@@ -1159,8 +1137,6 @@ int32_t openJTAGDevice(void)
 		printf("FTDI ResetPort failed: Check cable, connection and FTDI driver.\n");
 		return -1;
 	}
-
-	uint8_t testpins = 0;
 	#endif
 
 	switch (gJTAGMode)
@@ -1170,7 +1146,6 @@ int32_t openJTAGDevice(void)
 		ABBM_IO = 0;
 		break;
 	case JTAG_FTDI_BITBANG_CBUS_READ:
-		CBUS_IO = 0;
 		ABBM_IO = abbmTCK|abbmTDI|abbmTMS;
 		break;
 	case JTAG_FTDI_BITBANG2:
@@ -1189,18 +1164,17 @@ int32_t openJTAGDevice(void)
 int BenchmarkUSB(void)
 {
 	int tps = 0;
-	uint32_t bt = 0;
+	int32_t bt = 0;
 
 	if (ftdi)
 	{
 		bt = getMilliseconds(0);
-		while (bt == getMilliseconds(0))
-			;
+		while (bt == getMilliseconds(0));
 		bt = getMilliseconds(0);
 		while (getMilliseconds(bt) < 25)
 		{
 			tps++;
-			FT_CHECK(ftdi_set_bitmode(ftdi, 0x00, BITMODE_CBUS));
+			FT_CHECK(ftdi_set_bitmode(ftdi, CBUS_IO | 0, BITMODE_CBUS));
 			FT_CHECK(ftdi_read_pins(ftdi, &in_byte));
 		}
 	}
@@ -1210,7 +1184,6 @@ int BenchmarkUSB(void)
 // initialize FT230X EEPROM for FleaFPGA use
 int32_t InitFleaFPGA()
 {
-//	uint32_t i = 0;
 	printf("Not supported using libftdi1.2 (yet)...");
 	fflush(stdout);
 

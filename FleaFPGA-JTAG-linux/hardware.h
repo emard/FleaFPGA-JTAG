@@ -3,6 +3,8 @@
 #define MAX_USB_DEVICES		16
 #define ASYNC_BB_RATE		(921600/4)
 #define ASYNC_BB_RATE_SLOW	(115200/4)
+#define FTDI_LATENCY_MS         2
+#define FTDI_BUF_SIZE		(1024*16)
 #define PRINT_MAX_COLUMN	77
 #define MAX_CLOCK_RUN		(65536/3)	// L H L
 #define AUTO_POLL_DELAY_MS	3500

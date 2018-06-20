@@ -29,4 +29,4 @@ icon.res: flea_logo.ico icon.rc
 all: clean FleaFPGA-JTAG
 
 clean:
-	rm -f ./FleaFPGA-JTAG *.o *.res
+	rm -f ./FleaFPGA-JTAG.exe *.o *.res

@@ -8,8 +8,10 @@
 #define ftdi_get_error_string(a) ""
 #define ftdi_read_pins(a,b) FT_GetBitMode(a,b)
 #define ftdi_set_baudrate(a,b) FT_SetBaudRate(a,b)
+#define ftdi_set_latency_timer(a,b) FT_SetLatencyTimer(a,b)
+#define ftdi_set_usb_parameters(a,b,c) FT_SetUSBParameters(a,b,c)
 #define usleep(a) Sleep(a)
-#define	FT_CHECK(x)	(ftdi_status = (x), (ftdi_status == FT_OK ? 0 : printf("FTDI: %s returned %d in %s:%d\n", STR(x), (int32_t)ftdi_status, __FUNCTION__, __LINE__)), ftdi_status)
+#define	FT_CHECK(x)	(ftdi_status = (x), (ftdi_status == FT_OK ? 0 : printf("FTDI: %s returned %d in %s:%d\n", STR(x), (int32_t)ftdi_status, __FUNCTION__, __LINE__)))
 #define FT_CHECK_WRITE(a,b,c,d) FT_CHECK(FT_Write(a, b, c, &d))
 #define FT_CHECK_DEVLIST(a,b,c) FT_CHECK(FT_CreateDeviceInfoList(&a))
 #define BITMODE_CBUS FT_BITMODE_CBUS_BITBANG

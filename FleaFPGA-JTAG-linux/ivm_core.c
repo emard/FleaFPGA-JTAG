@@ -1414,6 +1414,7 @@ int8_t ispVMShift( int8_t a_cCode )
 		break;
 	case XSDR:  
 		g_usDataType |= EXPRESS; /*mark simultaneous in and out*/
+	// fall-thru
     case SDR:
 		g_usDataType |= SDR_DATA;
 		/* 1/15/04 If already in SHIFTDR, then do not move state or shift in header.  
