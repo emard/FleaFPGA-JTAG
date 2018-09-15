@@ -130,6 +130,10 @@ char *FleaFPGA_Desc[] =
 	"ULX3S FPGA v1.7",
 	"ULX3S FPGA 25K v1.7",
 	"ULX3S FPGA 45K v1.7",
+	"ULX3S FPGA 12K v2.1.2",
+	"ULX3S FPGA 25K v2.1.2",
+	"ULX3S FPGA 45K v2.1.2",
+	"ULX3S FPGA 85K v2.1.2",
 };
 
 const int32_t FleaFPGA_Default_Mode = JTAG_FTDI_BITBANG_CBUS_READ; // override with -f -s -u
@@ -144,6 +148,10 @@ int32_t FleaFPGA_Mode[] =
 	JTAG_FTDI_BITBANG,
 	JTAG_FTDI_BITBANG,
 	JTAG_FTDI_BITBANG,
+	JTAG_FTDI_BITBANG,
+	JTAG_FTDI_BITBANG,
+	JTAG_FTDI_BITBANG,
+	JTAG_FTDI_BITBANG,
 };
 
 // FTDI USB ID map
@@ -155,6 +163,10 @@ int16_t FleaFPGA_ProductID[] =
 	0x6015,
 	0x6015,
 	0x6001,
+	0x6015,
+	0x6015,
+	0x6015,
+	0x6015,
 	0x6015,
 	0x6015,
 	0x6015,
