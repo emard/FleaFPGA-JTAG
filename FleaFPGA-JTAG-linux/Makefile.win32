@@ -6,7 +6,7 @@
 
 CC	= i686-w64-mingw32-gcc
 CFLAGS	= -O2 -g -Wall -Wshadow -Wextra -I../
-# CFLAGS += -DVME_DEBUG
+CFLAGS += -DVME_DEBUG
 LFLAGS	= -L.
 LIBS	=  ftd2xx.lib -lwinmm -lcomdlg32
 

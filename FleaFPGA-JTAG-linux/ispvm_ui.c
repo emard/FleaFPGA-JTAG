@@ -94,7 +94,7 @@ void writeConfig(void);
 unsigned short g_usPreviousSize = 0;
 unsigned short g_usExpectedCRC = 0;
 char szCommandLineArg[ 4096 ]      = { 0 };
-char cmd_str[4096] = { 0 };
+char cmd_str[8192] = { 0 };
 char tmp_str[4096] = { 0 };
 char op_str[4096] = { 0 };
 char orig_op_str[4096] = { 0 };
@@ -137,6 +137,7 @@ extern LVDSPair * g_pLVDSList;
 extern uint8_t g_usCalculateChecksum;
 extern unsigned int g_usChecksum;
 extern unsigned int g_uiChecksumIndex;
+extern uint8_t g_vme_debug;
 /***************************************************************
 *
 * External variables and functions declared in hardware.c module.
@@ -835,7 +836,7 @@ void quitmsg(void)
 void showHelp(void)
 {
 	printf("FleaFPGA-JTAG: JTAG utility for FleaFPGA using Lattice FPGA.\n\n");
-	printf("Usage: FleaFPGA-JTAG [-f | -s | -t] [-l] [-v] [-p] [-m <desc>] [-c <path>]\n");
+	printf("Usage: FleaFPGA-JTAG [-f | -s | -t] [-l] [-v] [-d] [-p] [-m <desc>] [-c <path>]\n");
 	printf("                     [ <XCF_file | VME_file> ... ]\n");
 	printf("\n");
 	printf("  -f        = Fast FTDI bit-bang JTAG with CBUS read\n");
@@ -851,6 +852,7 @@ void showHelp(void)
 	printf("  -m <desc> = Search for FleaFPGA FTDI device description <desc> or #<serial>\n");
 	printf("  -p        = Paranoia mode (slower conservative settings for troubleshooting)\n");
 	printf("  -v        = Verbose output (show all JTAG output as \">\" and input as \"=\")\n");
+	printf("  -d        = Verbose output (show VME SVF commands)\n");
 	printf("  -w        = Write current options to settings file (new defaults)\n");
 	printf("  -q <title>= Quit app where window title contains comma separated strings\n");
 	printf("  -?        = This help text\n");
@@ -1079,6 +1081,8 @@ void writeConfig(void)
 			fprintf(cf, "-m %s\n", FleaFPGA_Default_Desc);
 		if (gConfigLoaded && gVerbose)
 			fprintf(cf, "-v\n");
+		if (gConfigLoaded && g_vme_debug)
+			fprintf(cf, "-d\n");
 		if (gConfigLoaded && gAutomatic)
 			fprintf(cf, "-a\n");
 		if (gConfigLoaded && gParanoidSafety)
@@ -1165,6 +1169,10 @@ void readConfig(void)
 					case 'v':
 						gVerbose = 1;
 						printf("Verbose mode enabled\n");
+						break;
+					case 'd':
+						g_vme_debug = 1;
+						printf("VME debug enabled\n");
 						break;
 					case 'c':
 						strncpy(ddtcmd_path, &str[3], sizeof (ddtcmd_path)-1);
@@ -1434,6 +1442,11 @@ int main( int argc, char * argv[] )
 						printf("Verbose mode enabled.\n");
 					else
 						printf("Verbose mode disabled.\n");
+					break;
+				case 'd':
+					g_vme_debug = 1;
+					if (gVerbose)
+						printf("VME debug mode enabled.\n");
 					break;
 				case 'a':
 					gAutomatic = 1;

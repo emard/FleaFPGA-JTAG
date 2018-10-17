@@ -322,6 +322,7 @@ extern const uint8_t g_ucPinENABLE;
 extern const uint8_t g_ucPinTRST;
 extern const uint8_t g_ucPinTDO;
 
+uint8_t g_vme_debug = 0;
 #ifdef VME_DEBUG
 
 /***************************************************************
@@ -522,12 +523,15 @@ int8_t ispVMCode()
 			ispVMStateMachine( ucState );
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
+			{
 			if ( g_usDataType & LHEAP_IN ) {
 				printf( "LDELAY %s ", GetState( ucState ) );
 			}
 			else {
 				printf( "STATE %s;\n", GetState( ucState ) );
 			}
+			} // if ( g_vme_debug )
 #endif //VME_DEBUG
 			break;
 		case SIR:
@@ -537,16 +541,20 @@ int8_t ispVMCode()
 #ifdef VME_DEBUG
 			switch( cOpcode ) {
 			case SIR:
-				printf( "SIR " );
+				if ( g_vme_debug )
+					printf( "SIR " );
 				break;
 			case SDR:
 			case XSDR:
+				if ( g_vme_debug )
+				{
 				if ( g_usDataType & LHEAP_IN ) {
 					printf( "LSDR " );
 				}
 				else {
 					printf( "SDR " );
 				}
+				} // if ( g_vme_debug )
 				break;
 			}
 #endif //VME_DEBUG
@@ -574,6 +582,8 @@ int8_t ispVMCode()
 			ispVMDelay( usDelay );
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
+			{
 			if ( usDelay & 0x8000 ) {
 
 				/***************************************************************
@@ -607,6 +617,7 @@ int8_t ispVMCode()
 					printf( "RUNTEST %.2E SEC;\n", ( float ) usDelay / 1000000 );
 				}
 			}
+			} // if ( g_vme_debug )
 #endif //VME_DEBUG
 			break;
 		case TCK:
@@ -622,6 +633,7 @@ int8_t ispVMCode()
 			ispVMClocks( usToggle );
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "RUNTEST %d TCK;\n", usToggle );
 #endif //VME_DEBUG
 			break;
@@ -636,6 +648,7 @@ int8_t ispVMCode()
 			g_ucEndDR = GetByte();
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "ENDDR %s;\n", GetState( g_ucEndDR ) );
 #endif //VME_DEBUG
 			break;
@@ -650,6 +663,7 @@ int8_t ispVMCode()
 			g_ucEndIR = GetByte();
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "ENDIR %s;\n", GetState( g_ucEndIR ) );
 #endif //VME_DEBUG
 			break;
@@ -659,6 +673,7 @@ int8_t ispVMCode()
 		case TDR:
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug ) {
 			switch( cOpcode ) {
 			case HIR:
 				printf( "HIR " );
@@ -673,6 +688,7 @@ int8_t ispVMCode()
 				printf( "TDR " );
 				break;
 			}
+			} // if ( g_vme_debug )
 #endif //VME_DEBUG
 			
 			/***************************************************************
@@ -688,6 +704,7 @@ int8_t ispVMCode()
 			}
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( ";\n" );
 #endif //VME_DEBUG
 			break;
@@ -704,6 +721,7 @@ int8_t ispVMCode()
 			g_usMaxSize = (uint16_t) ispVMDataSize();
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "// MEMSIZE %d\n", g_usMaxSize );
 #endif //VME_DEBUG
 			break;
@@ -719,18 +737,21 @@ int8_t ispVMCode()
 			switch ( cOpcode ) {
 			case LATTICE:
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "// VENDOR LATTICE\n" );
 #endif //VME_DEBUG
 				g_cVendor = LATTICE;
 				break;
 			case ALTERA:
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "// VENDOR ALTERA\n" );
 #endif //VME_DEBUG
 				g_cVendor = ALTERA;
 				break;
 			case XILINX:
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "// VENDOR XILINX\n" );
 #endif //VME_DEBUG
 				g_cVendor = XILINX;
@@ -868,6 +889,7 @@ int8_t ispVMCode()
 				if(g_iFrequency == 1)
 					g_iFrequency = 1000;
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "FREQUENCY %.2E HZ;\n", ( float ) g_iFrequency * 1000 );
 #endif //VME_DEBUG
 			}
@@ -876,6 +898,7 @@ int8_t ispVMCode()
 				if(g_iFrequency == 0)
 					g_iFrequency = 1000;
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "FREQUENCY %.2E HZ;\n", ( float ) g_iFrequency );
 #endif //VME_DEBUG
 			}
@@ -960,6 +983,7 @@ int8_t ispVMCode()
 			***************************************************************/
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "\nINVALID OPCODE: 0x%.2X\n", cOpcode );
 #endif //VME_DEBUG
 
@@ -1459,6 +1483,7 @@ int8_t ispVMShift( int8_t a_cCode )
 	}
 
 #ifdef VME_DEBUG
+	if ( g_vme_debug ) {
 	printf( "%d ", g_usiDataSize );
 
 	if ( g_usDataType & TDI_DATA ) {
@@ -1482,6 +1507,7 @@ int8_t ispVMShift( int8_t a_cCode )
 	}
 
 	printf( ";\n" );
+	} // if ( g_vme_debug )
 #endif //VME_DEBUG
 	
 	if ( g_usDataType & TDO_DATA || g_usDataType & DMASK_DATA ) {
@@ -1590,6 +1616,7 @@ int8_t ispVMAmble( int8_t Code )
 	g_usiDataSize = (uint16_t)ispVMDataSize();
 	
 #ifdef VME_DEBUG
+	if ( g_vme_debug )
 	printf( "%d", g_usiDataSize );
 #endif //VME_DEBUG
 
@@ -1635,8 +1662,11 @@ int8_t ispVMAmble( int8_t Code )
 			ispVMData( g_pucHIRData );
 
 #ifdef VME_DEBUG
+		if ( g_vme_debug )
+		{
 			printf( " TDI " );
 			PrintData( g_usHeadIR, g_pucHIRData );
+		}
 #endif //VME_DEBUG
 		}
 		break;
@@ -1664,8 +1694,10 @@ int8_t ispVMAmble( int8_t Code )
 			ispVMData( g_pucTIRData );
 
 #ifdef VME_DEBUG
+		if ( g_vme_debug ) {
 			printf( " TDI " );
 			PrintData( g_usTailIR, g_pucTIRData );
+		}
 #endif //VME_DEBUG
 		}
 		break;
@@ -1693,8 +1725,10 @@ int8_t ispVMAmble( int8_t Code )
 			ispVMData( g_pucHDRData );
 
 #ifdef VME_DEBUG
+		if ( g_vme_debug ) {
 			printf( " TDI " );
 			PrintData( g_usHeadDR, g_pucHDRData );
+		}
 #endif //VME_DEBUG
 		}
 		break;
@@ -1722,8 +1756,10 @@ int8_t ispVMAmble( int8_t Code )
 			ispVMData( g_pucTDRData );
 
 #ifdef VME_DEBUG
+		if ( g_vme_debug ) {
 			printf( " TDI " );
 			PrintData( g_usTailDR, g_pucTDRData );
+		}
 #endif //VME_DEBUG
 		}
 		break;
@@ -2020,6 +2056,7 @@ int8_t ispVMLCOUNT( uint16_t a_usCountSize )
 	}
 
 #ifdef VME_DEBUG
+	if ( g_vme_debug )
 	printf( "LCOUNT %d;\n", a_usCountSize );
 #endif //VME_DEBUG
 
@@ -2094,11 +2131,13 @@ int8_t ispVMLCOUNT( uint16_t a_usCountSize )
 				}
 				ispVMStateMachine( ucState );
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "LDELAY %s ", GetState( ucState ) );
 #endif //VME_DEBUG
 				break;
 			case SIR:
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "SIR " );					
 #endif //VME_DEBUG
 				/***************************************************************
@@ -2112,6 +2151,7 @@ int8_t ispVMLCOUNT( uint16_t a_usCountSize )
 			case SDR:
 
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "LSDR " );
 #endif //VME_DEBUG
 				/***************************************************************
@@ -2134,6 +2174,7 @@ int8_t ispVMLCOUNT( uint16_t a_usCountSize )
 				ispVMDelay( usDelay );
 
 #ifdef VME_DEBUG
+				if ( g_vme_debug ) {
 				if ( usDelay & 0x8000 ) {
 
 					/***************************************************************
@@ -2157,6 +2198,7 @@ int8_t ispVMLCOUNT( uint16_t a_usCountSize )
 
 					printf( "%.2E SEC;\n", ( float ) usDelay / 1000000 );
 				}
+				} // if ( g_vme_debug )
 #endif //VME_DEBUG
 				break;
 			case TCK:
@@ -2171,6 +2213,7 @@ int8_t ispVMLCOUNT( uint16_t a_usCountSize )
 				ispVMClocks( usToggle );
 
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "RUNTEST %d TCK;\n", usToggle );
 #endif //VME_DEBUG
 				break;
@@ -2218,6 +2261,7 @@ int8_t ispVMLCOUNT( uint16_t a_usCountSize )
 				***************************************************************/
 
 #ifdef VME_DEBUG
+				if ( g_vme_debug )
 				printf( "\nINVALID OPCODE: 0x%.2X\n", cOpcode );
 #endif //VME_DEBUG
 
@@ -2393,8 +2437,11 @@ void ispVMStateMachine( int8_t cNextJTAGState )
 void ispVMStart()
 {
 #ifdef VME_DEBUG
+	if ( g_vme_debug )
+	{
 	printf( "// ISPVM EMBEDDED ADDED\n" );
 	printf( "STATE RESET;\n" );
+	}
 #endif
 
 	ispVMStateMachine( RESET );    /*step devices to RESET state*/
@@ -2412,9 +2459,12 @@ void ispVMStart()
 void ispVMEnd()
 {
 #ifdef VME_DEBUG
+	if ( g_vme_debug )
+	{
 	printf( "// ISPVM EMBEDDED ADDED\n" );
 	printf( "STATE RESET;\n" );
 	printf( "RUNTEST 1.00E-001 SEC;\n" );
+	}
 #endif
 
 	ispVMStateMachine( RESET );   /*step devices to RESET state */
@@ -2724,6 +2774,7 @@ int8_t ispVMRead( uint16_t a_usiDataSize )
 		*****************************************************************************/
 
 #ifdef VME_DEBUG
+	if ( g_vme_debug )
 		printf( "RECIEVED TDO (" );
 #else
 //		vme_out_string( "Display Data: 0x" );
@@ -2748,16 +2799,19 @@ int8_t ispVMRead( uint16_t a_usiDataSize )
 				cMaskByte >>= 1;
 			}
 #ifdef VME_DEBUG
+			if ( g_vme_debug ) {
 			printf( "%.2X", cDataByte );
 			if ( ( ( ( a_usiDataSize + 7 ) / 8 ) - usDataSizeIndex ) % 40 == 39 ) {
 				printf( "\n\t\t" );
 			}
+			} //  if ( g_vme_debug )
 #else
 			vme_out_hex( cDataByte );
 #endif //VME_DEBUG
 		}
 
 #ifdef VME_DEBUG
+		if ( g_vme_debug )
 		printf( ")\n\n" );
 #else
 //		vme_out_string( "\n" );
@@ -2781,6 +2835,7 @@ int8_t ispVMRead( uint16_t a_usiDataSize )
 		else {
 
 #ifdef VME_DEBUG
+			if ( g_vme_debug )
 			printf( "TOTAL ERRORS: %d\n", usErrorCount );
 #endif //VME_DEBUG
 
@@ -3059,6 +3114,7 @@ int8_t ispVMProcessLVDS( uint16_t a_usLVDSCount )
 	g_usLVDSPairCount = a_usLVDSCount;
 
 #ifdef VME_DEBUG
+	if ( g_vme_debug )
 	printf( "LVDS %d (", a_usLVDSCount );
 #endif //VME_DEBUG
 
@@ -3082,17 +3138,20 @@ int8_t ispVMProcessLVDS( uint16_t a_usLVDSCount )
 		g_pLVDSList[ usLVDSIndex ].usNegativeIndex = (uint16_t)ispVMDataSize();
 
 #ifdef VME_DEBUG
+		if ( g_vme_debug ) {
 		if ( usLVDSIndex < g_usLVDSPairCount - 1 ) {
 			printf( "%d:%d, ", g_pLVDSList[ usLVDSIndex ].usPositiveIndex, g_pLVDSList[ usLVDSIndex ].usNegativeIndex );
 		}
 		else {
 			printf( "%d:%d", g_pLVDSList[ usLVDSIndex ].usPositiveIndex, g_pLVDSList[ usLVDSIndex ].usNegativeIndex );
 		}
+		} // if ( g_vme_debug )
 #endif //VME_DEBUG
 
 	}
 
 #ifdef VME_DEBUG
+	if ( g_vme_debug )
 	printf( ");\n");
 #endif //VME_DEBUG
 
