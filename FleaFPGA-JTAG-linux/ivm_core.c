@@ -2775,7 +2775,7 @@ int8_t ispVMRead( uint16_t a_usiDataSize )
 
 #ifdef VME_DEBUG
 	if ( g_vme_debug )
-		printf( "RECIEVED TDO (" );
+		printf( "// RECIEVED TDO (" );
 #else
 //		vme_out_string( "Display Data: 0x" );
 #endif //VME_DEBUG
@@ -2800,10 +2800,9 @@ int8_t ispVMRead( uint16_t a_usiDataSize )
 			}
 #ifdef VME_DEBUG
 			if ( g_vme_debug ) {
+			if ( ( ( ( a_usiDataSize + 7 ) / 8 ) - usDataSizeIndex ) % 40 == 39 )
+				printf( "\n// \t\t" );
 			printf( "%.2X", cDataByte );
-			if ( ( ( ( a_usiDataSize + 7 ) / 8 ) - usDataSizeIndex ) % 40 == 39 ) {
-				printf( "\n\t\t" );
-			}
 			} //  if ( g_vme_debug )
 #else
 			vme_out_hex( cDataByte );

@@ -321,7 +321,7 @@ unsigned char GetByte()
 void vme_out_char(unsigned char charOut)
 {
 	CloseLine();
-	printf("%c",charOut);
+	fprintf(stderr, "%c",charOut);
 	if (charOut == '\n' || charOut == '\r')
 		OpenLine(1);
 }
@@ -342,16 +342,16 @@ void vme_out_hex(unsigned char hexOut)
 		CloseLine();
 		if (out_fp)
 		{
-			printf("Data read will be written to file:\n  \"");
+			fprintf(stderr, "Data read will be written to file:\n  \"");
 			SetBoldText();
-			printf("%s", out_file);
+			fprintf(stderr, "%s", out_file);
 			SetNormalText();
-			printf("\"\n\n");
+			fprintf(stderr, "\"\n\n");
 		}
 		else
 		{
 			SetRedText();
-			printf("\nError: Unable to write to file:\n  \"%s\"\n", out_file);
+			fprintf(stderr, "\nError: Unable to write to file:\n  \"%s\"\n", out_file);
 			SetNormalText();
 			gRetCode = -1;
 			exit(gRetCode);
@@ -375,7 +375,7 @@ void vme_out_string(char *stringOut)
 	if(stringOut && strlen(stringOut))
 	{
 		CloseLine();
-		printf("%s",stringOut);
+		fprintf(stderr, "%s",stringOut);
 		if (stringOut[strlen(stringOut)-1] == '\n' || stringOut[strlen(stringOut)-1] == '\r')
 			OpenLine(1);
 	}
@@ -787,8 +787,8 @@ signed char ispVM( const char * a_pszFilename )
 
 	if ( cRetCode == 0 && g_usExpectedCRC != 0 && ( g_usExpectedCRC != g_usCalculatedCRC ) )
 	{
-		printf( "Expected CRC:   0x%.4X\n", g_usExpectedCRC );
-		printf( "Calculated CRC: 0x%.4X\n", g_usCalculatedCRC );
+		fprintf(stderr,  "Expected CRC:   0x%.4X\n", g_usExpectedCRC );
+		fprintf(stderr,  "Calculated CRC: 0x%.4X\n", g_usCalculatedCRC );
 		return VME_CRC_FAILURE;
 	}
 	
@@ -807,18 +807,18 @@ void quitmsg(void)
 #endif
 	
 	if (gRetCode == 0xc0de1)	// quiet exit code for auto
-		printf("\n");
+		fprintf(stderr, "\n");
 	if (gRetCode != 0xc0de)	// quiet exit code for -?
-		printf("Done...");
+		fprintf(stderr, "Done...");
 	if (gRetCode < 0)
-		printf("\a");	// beep
+		fprintf(stderr, "\a");	// beep
 	fflush(stdout);
 #if defined(WIN32)
 	if (getenv("PROMPT") == NULL && getenv("SHELL") == NULL)	// clue that not at command prompt
 	{
 		if (gRetCode < 0)
 		{
-			printf("\nPress ENTER to continue:");
+			fprintf(stderr, "\nPress ENTER to continue:");
 			fflush(stdout);
 			fgets(szCommandLineArg, sizeof(szCommandLineArg), stdin);
 		}
@@ -829,33 +829,33 @@ void quitmsg(void)
 	}
 #endif
 	if (gRetCode != 0xc0de)	// quiet exit code for -?
-		printf("\n");
+		fprintf(stderr, "\n");
 	fflush(stdout);
 }
 
 void showHelp(void)
 {
-	printf("FleaFPGA-JTAG: JTAG utility for FleaFPGA using Lattice FPGA.\n\n");
-	printf("Usage: FleaFPGA-JTAG [-f | -s | -t] [-l] [-v] [-d] [-p] [-m <desc>] [-c <path>]\n");
-	printf("                     [ <XCF_file | VME_file> ... ]\n");
-	printf("\n");
-	printf("  -f        = Fast FTDI bit-bang JTAG with CBUS read\n");
-	printf("               (RTS=TDI, CB1=TDO, TX=TMS, CTS=TCK)\n");
-	printf("  -s        = Prototype board FTDI all CBUS JTAG\n");
-	printf("               (CB0=TDI, CB1=TDO, CB2=TMS, CB3=TCK)\n");
-	printf("  -u        = ULX3S board all bit-bang JTAG\n");
-	printf("               (RI=TDI/DCD=TMS/DSR=TCK/CTS=TDO)\n");
-	printf("  -t        = Test JTAG (fake JTAG with no actual hardware)\n");
-	printf("  -c <path> = Full path to Lattice Diamond Programmer \"ddtcmd.exe\" utility\n");
-	printf("               (used for automatic XCF processing to generate VME JTAG files)\n");
-	printf("  -l        = List information about all available FTDI devices\n");
-	printf("  -m <desc> = Search for FleaFPGA FTDI device description <desc> or #<serial>\n");
-	printf("  -p        = Paranoia mode (slower conservative settings for troubleshooting)\n");
-	printf("  -v        = Verbose output (show all JTAG output as \">\" and input as \"=\")\n");
-	printf("  -d        = Verbose output (show VME SVF commands)\n");
-	printf("  -w        = Write current options to settings file (new defaults)\n");
-	printf("  -q <title>= Quit app where window title contains comma separated strings\n");
-	printf("  -?        = This help text\n");
+	fprintf(stderr, "FleaFPGA-JTAG: JTAG utility for FleaFPGA using Lattice FPGA.\n\n");
+	fprintf(stderr, "Usage: FleaFPGA-JTAG [-f | -s | -t] [-l] [-v] [-d] [-p] [-m <desc>] [-c <path>]\n");
+	fprintf(stderr, "                     [ <XCF_file | VME_file> ... ]\n");
+	fprintf(stderr, "\n");
+	fprintf(stderr, "  -f        = Fast FTDI bit-bang JTAG with CBUS read\n");
+	fprintf(stderr, "               (RTS=TDI, CB1=TDO, TX=TMS, CTS=TCK)\n");
+	fprintf(stderr, "  -s        = Prototype board FTDI all CBUS JTAG\n");
+	fprintf(stderr, "               (CB0=TDI, CB1=TDO, CB2=TMS, CB3=TCK)\n");
+	fprintf(stderr, "  -u        = ULX3S board all bit-bang JTAG\n");
+	fprintf(stderr, "               (RI=TDI/DCD=TMS/DSR=TCK/CTS=TDO)\n");
+	fprintf(stderr, "  -t        = Test JTAG (fake JTAG with no actual hardware)\n");
+	fprintf(stderr, "  -c <path> = Full path to Lattice Diamond Programmer \"ddtcmd.exe\" utility\n");
+	fprintf(stderr, "               (used for automatic XCF processing to generate VME JTAG files)\n");
+	fprintf(stderr, "  -l        = List information about all available FTDI devices\n");
+	fprintf(stderr, "  -m <desc> = Search for FleaFPGA FTDI device description <desc> or #<serial>\n");
+	fprintf(stderr, "  -p        = Paranoia mode (slower conservative settings for troubleshooting)\n");
+	fprintf(stderr, "  -v        = Verbose output (show all JTAG output as \">\" and input as \"=\")\n");
+	fprintf(stderr, "  -d        = Verbose output (show VME SVF commands)\n");
+	fprintf(stderr, "  -w        = Write current options to settings file (new defaults)\n");
+	fprintf(stderr, "  -q <title>= Quit app where window title contains comma separated strings\n");
+	fprintf(stderr, "  -?        = This help text\n");
 	
 	gRetCode = 0xc0de;
 	exit(1);
@@ -928,7 +928,7 @@ int processXCF(char *xcf, char *vme)
 	if (ask_loc)
 	{
 #if defined(WIN32)
-		printf("Requesting \"ddtcmd.exe\" location...\n");
+		fprintf(stderr, "Requesting \"ddtcmd.exe\" location...\n");
 		fflush(stdout);
 		rc = FileRequest("Select the \"ddtcmd.exe\" utility under Lattice Programmer \"bin\" directory (saved to settings)", "Executable (*.exe)\0*.exe\0All files\0*.*\0", ddtcmd_path, sizeof (ddtcmd_path));
 		if (rc)
@@ -937,8 +937,8 @@ int processXCF(char *xcf, char *vme)
 #endif
 		{
 			SetRedText();
-			printf("\nError: Path to Lattice \"ddtcmd.exe\" required to process XCF into VME files.\n");
-			printf("       Please supply it with the -c option.\n");
+			fprintf(stderr, "\nError: Path to Lattice \"ddtcmd.exe\" required to process XCF into VME files.\n");
+			fprintf(stderr, "       Please supply it with the -c option.\n");
 			SetNormalText();
 			gRetCode = -1;
 			exit(gRetCode);
@@ -1010,11 +1010,11 @@ int processXCF(char *xcf, char *vme)
 			xcf,
 			vme);
 			
-		printf("Processing XCF file:\n  \"");
+		fprintf(stderr, "Processing XCF file:\n  \"");
 		SetBoldText();
-		printf("%s", xcf);
+		fprintf(stderr, "%s", xcf);
 		SetNormalText();
-		printf("\"\n\n");
+		fprintf(stderr, "\"\n\n");
 		
 		fflush(stdout);
 
@@ -1027,7 +1027,7 @@ int processXCF(char *xcf, char *vme)
 		rc = -1;
 	}
 	
-	printf("\n");
+	fprintf(stderr, "\n");
 
 	return rc;
 }
@@ -1114,11 +1114,11 @@ void writeConfig(void)
 
 		fclose(cf);
 
-		printf("Wrote settings file:\n  \"");
+		fprintf(stderr, "Wrote settings file:\n  \"");
 		SetBoldText();
-		printf("%s", config_file);
+		fprintf(stderr, "%s", config_file);
 		SetNormalText();
-		printf("\"\n");
+		fprintf(stderr, "\"\n");
 		fflush(stdout);
 	}
 }
@@ -1168,11 +1168,11 @@ void readConfig(void)
 				{
 					case 'v':
 						gVerbose = 1;
-						printf("Verbose mode enabled\n");
+						fprintf(stderr, "Verbose mode enabled\n");
 						break;
 					case 'd':
 						g_vme_debug = 1;
-						printf("VME debug enabled\n");
+						fprintf(stderr, "VME debug enabled\n");
 						break;
 					case 'c':
 						strncpy(ddtcmd_path, &str[3], sizeof (ddtcmd_path)-1);
@@ -1195,11 +1195,11 @@ void readConfig(void)
 						break;
 					case 'p':
 						gParanoidSafety = 1;
-						printf("Using \"paranoid\" slow conservative settings.\n");
+						fprintf(stderr, "Using \"paranoid\" slow conservative settings.\n");
 						break;
 					default:
 						SetRedText();
-						printf("\nError: Bad option \"%s\" in settings file: %s\n", str, config_file);
+						fprintf(stderr, "\nError: Bad option \"%s\" in settings file: %s\n", str, config_file);
 						SetNormalText();
 						gRetCode = -1;
 						exit(gRetCode);
@@ -1216,7 +1216,7 @@ void readConfig(void)
 	{
 		if (!ddtcmd_path[0])
 		{
-			printf("Requesting \"ddtcmd.exe\" location...\n");
+			fprintf(stderr, "Requesting \"ddtcmd.exe\" location...\n");
 			fflush(stdout);
 		
 //			FileRequest("Select the \"ddtcmd.exe\" utility under Lattice Programmer \"bin\" directory (saved to settings)", "Executable (*.exe)\0*.exe\0All files\0*.*\0", ddtcmd_path, sizeof (ddtcmd_path));
@@ -1255,7 +1255,7 @@ int ProcessFile(char *filename)
 			if (processXCF(xcf_file, vme_file) != 0)
 			{
 				SetRedText();
-				printf("Error: XCF processing failed.\n");
+				fprintf(stderr, "Error: XCF processing failed.\n");
 				SetNormalText();
 				gRetCode = -1;
 				exit(gRetCode);
@@ -1273,22 +1273,22 @@ int ProcessFile(char *filename)
 
 		if (rc == -1)
 		{
-			printf("\nError: FleaFPGA FT230x USB device not detected.\n\n");
+			fprintf(stderr, "\nError: FleaFPGA FT230x USB device not detected.\n\n");
 		}
 		else if (rc == -2)
 		{
-			printf("\nError: Check that FleaFPGA FT230x EEPROM is set for CBUS0-3 GPIO.\n\n");
+			fprintf(stderr, "\nError: Check that FleaFPGA FT230x EEPROM is set for CBUS0-3 GPIO.\n\n");
 		}
 		else
 		{
-			printf("\nError: FTDI error?\n\n");
+			fprintf(stderr, "\nError: FTDI error?\n\n");
 		}
 		SetNormalText();
 		gRetCode = -1;
 		exit(gRetCode);
 	}
 	
-	printf("JTAG method: %s\n\n", FTDIModeName[gJTAGMode]);
+	fprintf(stderr, "JTAG method: %s\n\n", FTDIModeName[gJTAGMode]);
 
 	e = strrchr(vme_file, '-');
 	if (e && strstr(e, "Vrfy") && !strstr(e, "ID"))
@@ -1297,15 +1297,15 @@ int ProcessFile(char *filename)
 		if (usb_tps < 1000)
 		{
 			SetYellowText();
-			printf("WARNING: Verify is EXTREMELY slow (limited by slow ~%d USB transactions/sec).\n", usb_tps);
-			printf("         Around 6 hours for SRAM/Flash verify (USB hub may increase speed 10x)!\n\n");
+			fprintf(stderr, "WARNING: Verify is EXTREMELY slow (limited by slow ~%d USB transactions/sec).\n", usb_tps);
+			fprintf(stderr, "         Around 6 hours for SRAM/Flash verify (USB hub may increase speed 10x)!\n\n");
 			SetNormalText();
 		}
 		else if (usb_tps < 10000)
 		{
 			SetYellowText();
-			printf("NOTE: Verify can be slow (limited by ~%d USB transactions/sec).\n", usb_tps);
-			printf("      Typically ~14 minutes for SRAM/Flash verify at this speed.\n\n");
+			fprintf(stderr, "NOTE: Verify can be slow (limited by ~%d USB transactions/sec).\n", usb_tps);
+			fprintf(stderr, "      Typically ~14 minutes for SRAM/Flash verify at this speed.\n\n");
 			SetNormalText();
 		}
 	}
@@ -1316,15 +1316,15 @@ int ProcessFile(char *filename)
 		if (usb_tps < 500)
 		{
 			SetYellowText();
-			printf("WARNING: Read is EXTREMELY slow (limited by slow ~%d USB transactions/sec).\n", usb_tps);
-			printf("         Around 6 hours for SRAM/Flash read (USB hub may increase speed 10x)!\n\n");
+			fprintf(stderr, "WARNING: Read is EXTREMELY slow (limited by slow ~%d USB transactions/sec).\n", usb_tps);
+			fprintf(stderr, "         Around 6 hours for SRAM/Flash read (USB hub may increase speed 10x)!\n\n");
 			SetNormalText();
 		}
 		else if (usb_tps < 10000)
 		{
 			SetYellowText();
-			printf("NOTE: Read can be slow (limited by ~%d USB transactions/sec).\n", usb_tps);
-			printf("      Typically ~14 minutes for SRAM/Flash read at this speed.\n\n");
+			fprintf(stderr, "NOTE: Read can be slow (limited by ~%d USB transactions/sec).\n", usb_tps);
+			fprintf(stderr, "      Typically ~14 minutes for SRAM/Flash read at this speed.\n\n");
 			SetNormalText();
 		}
 	}
@@ -1336,11 +1336,11 @@ int ProcessFile(char *filename)
 	
 	strcat(out_file, "-out.bin");
 
-	printf( "Processing VME file:\n  \"");
+	fprintf(stderr,  "Processing VME file:\n  \"");
 	SetBoldText();
-	printf("%s", vme_file);
+	fprintf(stderr, "%s", vme_file);
 	SetNormalText();
-	printf("\"\n\n");
+	fprintf(stderr, "\"\n\n");
 	
 	g_JTAGTime = getMilliseconds(0);
 
@@ -1364,31 +1364,31 @@ int ProcessFile(char *filename)
 	if ( rc >= 0 )
 	{
 		SetGreenText();
-		printf("+==========================================+\n" );
+		fprintf(stderr, "+==========================================+\n" );
 		if (orig_op_str[0])
-			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(orig_op_str))/2), " ", orig_op_str, (int) ((42 - strlen(orig_op_str)+1)/2), " ");
+			fprintf(stderr, "|%*.s%s%*s|\n", (int) ((42 - strlen(orig_op_str))/2), " ", orig_op_str, (int) ((42 - strlen(orig_op_str)+1)/2), " ");
 		else
-			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(generic_op_msg))/2), " ", generic_op_msg, (int) ((42 - strlen(generic_op_msg)+1)/2), " ");
+			fprintf(stderr, "|%*.s%s%*s|\n", (int) ((42 - strlen(generic_op_msg))/2), " ", generic_op_msg, (int) ((42 - strlen(generic_op_msg)+1)/2), " ");
 
-		printf("|               SUCCESSFUL!                |\n" );
-		printf("+==========================================+\n\n" );
+		fprintf(stderr, "|               SUCCESSFUL!                |\n" );
+		fprintf(stderr, "+==========================================+\n\n" );
 		SetNormalText();
 
 		//08/28/08 NN Added Calculate checksum support.
 		if(g_usChecksum != 0)
 		{
 			g_usChecksum &= 0xFFFF;
-			printf("Data Checksum: %.4X\n\n",g_usChecksum);
+			fprintf(stderr, "Data Checksum: %.4X\n\n",g_usChecksum);
 			g_usChecksum = 0;
 		}
 		
 		if (USBTransactions)
-			printf("Operation time    : %d:%02d.%d\n", g_JTAGTime / (60 * 1000), (g_JTAGTime / 1000) % 60, (g_JTAGTime % 1000) / 100);
+			fprintf(stderr, "Operation time    : %d:%02d.%d\n", g_JTAGTime / (60 * 1000), (g_JTAGTime / 1000) % 60, (g_JTAGTime % 1000) / 100);
 
 		if (NumberClockRuns)
-			printf("JTAG bits out/in  : %d/%d (bps %d, avg. run %d)\n", TotalClocks, TDOToggle, (TotalClocks * 1000) / g_JTAGTime, TotalClocks / NumberClockRuns);
+			fprintf(stderr, "JTAG bits out/in  : %d/%d (bps %d, avg. run %d)\n", TotalClocks, TDOToggle, (TotalClocks * 1000) / g_JTAGTime, TotalClocks / NumberClockRuns);
 		else
-			printf("JTAG bits out/in  : %d/%d (bps %d)\n", TotalClocks, TDOToggle, (TotalClocks * 1000) / g_JTAGTime);
+			fprintf(stderr, "JTAG bits out/in  : %d/%d (bps %d)\n", TotalClocks, TDOToggle, (TotalClocks * 1000) / g_JTAGTime);
 	}
 	
 	return rc;
@@ -1418,12 +1418,12 @@ int main( int argc, char * argv[] )
 
 	SetTitleBar("FleaFPGA-JTAG");
 	SetPurpleText();
-	printf( "    FleaFPGA-JTAG utility by Xark (built: " __DATE__ " "__TIME__")\n");
-	printf( "        based on ispVME(tm) V");
-	printf( VME_VERSION_NUMBER );
-	printf(" Copyright 1998-2011.\n");
-	printf( "                 Lattice Semiconductor Corp.\n" );
-	printf( "\n");
+	fprintf(stderr,  "    FleaFPGA-JTAG utility by Xark (built: " __DATE__ " "__TIME__")\n");
+	fprintf(stderr,  "        based on ispVME(tm) V");
+	fprintf(stderr,  VME_VERSION_NUMBER );
+	fprintf(stderr, " Copyright 1998-2011.\n");
+	fprintf(stderr,  "                 Lattice Semiconductor Corp.\n" );
+	fprintf(stderr,  "\n");
 	SetNormalText();
 
 	readConfig();
@@ -1439,18 +1439,18 @@ int main( int argc, char * argv[] )
 				case 'v':
 					gVerbose = !gVerbose;
 					if (gVerbose)
-						printf("Verbose mode enabled.\n");
+						fprintf(stderr, "Verbose mode enabled.\n");
 					else
-						printf("Verbose mode disabled.\n");
+						fprintf(stderr, "Verbose mode disabled.\n");
 					break;
 				case 'd':
 					g_vme_debug = 1;
 					if (gVerbose)
-						printf("VME debug mode enabled.\n");
+						fprintf(stderr, "VME debug mode enabled.\n");
 					break;
 				case 'a':
 					gAutomatic = 1;
-					printf("Automatic monitoring mode enabled (process when JED/BIT changes)\n");
+					fprintf(stderr, "Automatic monitoring mode enabled (process when JED/BIT changes)\n");
 					break;
 				case 'l':
 					ListDevices();
@@ -1468,7 +1468,7 @@ int main( int argc, char * argv[] )
 					else
 					{
 						SetRedText();
-						printf("\nError: Need full path to \"ddtcmd.exe\" following \"-c\"\n");
+						fprintf(stderr, "\nError: Need full path to \"ddtcmd.exe\" following \"-c\"\n");
 						SetNormalText();
 						gRetCode = -1;
 						exit(gRetCode);
@@ -1489,7 +1489,7 @@ int main( int argc, char * argv[] )
 					else
 					{
 						SetRedText();
-						printf("\nError: Need description string following \"-m\"\n");
+						fprintf(stderr, "\nError: Need description string following \"-m\"\n");
 						SetNormalText();
 						gRetCode = -1;
 						exit(gRetCode);
@@ -1510,9 +1510,9 @@ int main( int argc, char * argv[] )
 				case 'p':
 					gParanoidSafety = !gParanoidSafety;
 					if (gParanoidSafety)
-						printf("Using \"paranoid\" slow conservative settings for bit-rate and delays.\n");
+						fprintf(stderr, "Using \"paranoid\" slow conservative settings for bit-rate and delays.\n");
 					else
-						printf("Using default fast settings.\n");
+						fprintf(stderr, "Using default fast settings.\n");
 					break;
 				case 'q':
 					memset(gKillTitleStrs, 0, sizeof(gKillTitleStrs));
@@ -1528,7 +1528,7 @@ int main( int argc, char * argv[] )
 					else
 					{
 						SetRedText();
-						printf("\nError: Need comma separated window title substring(s) for \"-q\"\n");
+						fprintf(stderr, "\nError: Need comma separated window title substring(s) for \"-q\"\n");
 						SetNormalText();
 						gRetCode = -1;
 						exit(gRetCode);
@@ -1548,7 +1548,7 @@ int main( int argc, char * argv[] )
 					else
 					{
 						SetRedText();
-						printf("\nError: Need application path for \"-r\"\n");
+						fprintf(stderr, "\nError: Need application path for \"-r\"\n");
 						SetNormalText();
 						gRetCode = -1;
 						exit(gRetCode);
@@ -1566,7 +1566,7 @@ int main( int argc, char * argv[] )
 					// fall-thru
 				default:
 					SetRedText();
-					printf("\nError: Unrecognised option '%c'\n", argv[i][1]);
+					fprintf(stderr, "\nError: Unrecognised option '%c'\n", argv[i][1]);
 					SetNormalText();
 					// fall-thru
 				case '?':
@@ -1592,7 +1592,7 @@ int main( int argc, char * argv[] )
 #if defined(WIN32)
 	if (!did_file)
 	{
-		printf("Requesting file to process...\n");
+		fprintf(stderr, "Requesting file to process...\n");
 		fflush(stdout);
 	
 		int rc = 0;
@@ -1607,15 +1607,15 @@ int main( int argc, char * argv[] )
 	{
 		error_handler( gRetCode, szCommandLineArg );
 		SetRedText();
-		printf( "\n");
-		printf("+==========================================+\n" );
+		fprintf(stderr,  "\n");
+		fprintf(stderr, "+==========================================+\n" );
 		if (orig_op_str[0])
-			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(orig_op_str))/2), " ", orig_op_str, (int) ((42 - strlen(orig_op_str)+1)/2), " ");
+			fprintf(stderr, "|%*.s%s%*s|\n", (int) ((42 - strlen(orig_op_str))/2), " ", orig_op_str, (int) ((42 - strlen(orig_op_str)+1)/2), " ");
 		else
-			printf("|%*.s%s%*s|\n", (int) ((42 - strlen(generic_op_msg))/2), " ", generic_op_msg, (int) ((42 - strlen(generic_op_msg)+1)/2), " ");
-		printf("|                  FAILED!                 |\n" );
-		printf("+==========================================+\n\n" );
-		printf( "Error: %s\n\n", szCommandLineArg );
+			fprintf(stderr, "|%*.s%s%*s|\n", (int) ((42 - strlen(generic_op_msg))/2), " ", generic_op_msg, (int) ((42 - strlen(generic_op_msg)+1)/2), " ");
+		fprintf(stderr, "|                  FAILED!                 |\n" );
+		fprintf(stderr, "+==========================================+\n\n" );
+		fprintf(stderr,  "Error: %s\n\n", szCommandLineArg );
 		SetNormalText();
 	}
 
@@ -1623,7 +1623,7 @@ int main( int argc, char * argv[] )
 	
 	if (g_TotalTime)
 	{
-		printf("Total time        : %d:%02d.%d\n", g_TotalTime / (60 * 1000), (g_TotalTime / 1000) % 60, (g_TotalTime % 1000) / 100);
+		fprintf(stderr, "Total time        : %d:%02d.%d\n", g_TotalTime / (60 * 1000), (g_TotalTime / 1000) % 60, (g_TotalTime % 1000) / 100);
 	}
 	
 	exit( gRetCode );

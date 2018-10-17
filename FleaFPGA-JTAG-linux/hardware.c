@@ -291,7 +291,7 @@ void flushPort(void)
 				USBTransactions++;
 				FT_CHECK_WRITE(ftdi, JTAGBuffer, JTAGCount, written);		// clock -> L -> H -> L
 				if (written != JTAGCount)
-					printf("\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
+					fprintf(stderr, "\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
 
 				NumberClockRuns++;
 				if (LongestRun < OutputRunCount)
@@ -317,7 +317,7 @@ void flushPort(void)
 				USBTransactions++;
 				FT_CHECK_WRITE(ftdi, JTAGBuffer, JTAGCount, written);
 				if (written != JTAGCount)
-					printf("\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
+					fprintf(stderr, "\n%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, JTAGCount);
 
 				NumberClockRuns++;
 				if (LongestRun < OutputRunCount)
@@ -461,11 +461,11 @@ void writePort( uint8_t a_ucPins, uint8_t a_ucValue )
 		TotalClocks++;
 		if (gVerbose)
 		{
-			gColumn += printf(">%1X", g_siIspPins & (g_ucPinTDI|g_ucPinTMS));
+			gColumn += fprintf(stderr, ">%1X", g_siIspPins & (g_ucPinTDI|g_ucPinTMS));
 			if (gColumn >= PRINT_MAX_COLUMN)
 			{
 				gColumn = 0;
-				printf("\n");
+				fprintf(stderr, "\n");
 			}
 		}
 	}
@@ -493,7 +493,7 @@ void OpenLine(int32_t force)
 		{
 			clocks = ((TotalClocks - last_clocks) * 1000) / (ms - last_ms);
 			last_secs = secs;
-			printf("  JTAG bits clocked out/in: %d/%d  (time: %d:%02d.%d, bps: %d)    \r", TotalClocks, TDOToggle, ms / (60 * 1000), (ms / 1000) % 60, (ms % 1000) / 100, force != 2 ? clocks : (TotalClocks * 1000) / ms);
+			fprintf(stderr, "  JTAG bits clocked out/in: %d/%d  (time: %d:%02d.%d, bps: %d)    \r", TotalClocks, TDOToggle, ms / (60 * 1000), (ms / 1000) % 60, (ms % 1000) / 100, force != 2 ? clocks : (TotalClocks * 1000) / ms);
 			last_clocks = TotalClocks;
 			last_ms = ms;
 			line_open = 1;
@@ -507,7 +507,7 @@ void CloseLine(void)
 {
 	if (line_open)
 	{
-		printf("                                                                        \r");
+		fprintf(stderr, "                                                                        \r");
 		line_open = 0;
 	}
 }
@@ -587,11 +587,11 @@ uint8_t readPort(void)
 
 	if (gVerbose && gJTAGMode != JTAG_NONE)	// expected input is printed at a higher level in test mode
 	{
-		gColumn += printf("=%1X", ucRet); 
+		gColumn += fprintf(stderr, "=%1X", ucRet);
 		if (gColumn >= PRINT_MAX_COLUMN)
 		{
 			gColumn = 0;
-			printf("\n");
+			fprintf(stderr, "\n");
 		}
 		fflush(stdout);
 	}
@@ -811,7 +811,7 @@ void EnableHardware(void)
 		last_bitMode = BITMODE_BITBANG;
 		FT_CHECK_WRITE(ftdi, &HL[1], 1, written);
 		if (written != 1)
-			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+			fprintf(stderr, "%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		FT_CHECK(ftdi_set_bitmode(ftdi, CBUS_IO, BITMODE_CBUS));
 		last_bitMode = BITMODE_CBUS;
 		return;
@@ -828,7 +828,7 @@ void EnableHardware(void)
 		last_bitMode = BITMODE_BITBANG;
 		FT_CHECK_WRITE(ftdi, &HLo2[1], 1, written);
 		if (written != 1)
-			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+			fprintf(stderr, "%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		return;
 	}
 
@@ -843,7 +843,7 @@ void EnableHardware(void)
 		last_bitMode = BITMODE_BITBANG;
 		FT_CHECK_WRITE(ftdi, &HLo[1], 1, written);
 		if (written != 1)
-			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+			fprintf(stderr, "%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		return;
 	}
 	FT_CHECK(ftdi_set_bitmode(ftdi, CBUS_IO, BITMODE_CBUS));
@@ -877,7 +877,7 @@ void DisableHardware(void)
 		FT_CHECK(ftdi_set_bitmode(ftdi, ABBM_IO, BITMODE_BITBANG));
 		FT_CHECK_WRITE(ftdi, &HL[1], 1, written);
 		if (written != 1)
-			printf("%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+			fprintf(stderr, "%s(%d): short ftdi_write_data result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		FT_CHECK(ftdi_set_bitmode(ftdi, 0, BITMODE_CBUS));	// leave all as inputs
 	}
 }
@@ -921,17 +921,17 @@ void ListDevices(void)
 
 	if ((ftdi = ftdi_new()) == 0)
 	{
-		printf("\nError: FATAL: ftdi_new failed.\n");
+		fprintf(stderr, "\nError: FATAL: ftdi_new failed.\n");
 		return;
 	}
 
-	printf("Available FTDI devices:  (with * next to possible FleaFPGA devices)\n");
+	fprintf(stderr, "Available FTDI devices:  (with * next to possible FleaFPGA devices)\n");
 	// FT_CHECK(num_devices = ftdi_usb_find_all(ftdi, &devlist, 0, 0));
 	FT_CHECK_DEVLIST(num_devices, ftdi, devlist);
 	
 	if (ftdi_status < 0)
 	{
-		printf("\nError: Can't list devices (error %d:%s)\n", ftdi_status, ftdi_get_error_string(ftdi));
+		fprintf(stderr, "\nError: Can't list devices (error %d:%s)\n", ftdi_status, ftdi_get_error_string(ftdi));
 		return;
 	}
 
@@ -948,17 +948,17 @@ void ListDevices(void)
 
 			if (rc < 0 && (rc != -7 && rc != -8 && rc != -9))
 			{
-				printf("Error %d querying device: %s\n", rc, ftdi_get_error_string(ftdi));
+				fprintf(stderr, "Error %d querying device: %s\n", rc, ftdi_get_error_string(ftdi));
 
 				if (rc == -4)
-					printf("\nDo you have permissions (perhaps you need \"sudo\")?\n");
+					fprintf(stderr, "\nDo you have permissions (perhaps you need \"sudo\")?\n");
 
 				break;
 			}
 
 			if (ftdi_usb_open_dev(ftdi, dev_info->dev) == 0)
 			{
-				printf(" %c%2d %s - %-40.40s #%s\n", (ftdi->type == TYPE_230X) ? '*' : ' ', i,
+				fprintf(stderr, " %c%2d %s - %-40.40s #%s\n", (ftdi->type == TYPE_230X) ? '*' : ' ', i,
 					ftdi->type <= TYPE_230X ? FTDI_Type[ftdi->type] : "FTDI-??   ", 
 					desc[0] ? desc : "(none)", 
 					serial[0] ? serial : "(none)"); 
@@ -967,7 +967,7 @@ void ListDevices(void)
 			}
 			else
 			{
-				printf(" %c%2d %s - %s %s #%s\n", ' ', i,
+				fprintf(stderr, " %c%2d %s - %s %s #%s\n", ' ', i,
 					"(can't open)", 
 					manufac[0] ? manufac : "(none)",
 					desc[0] ? desc : "(none)", 
@@ -977,10 +977,10 @@ void ListDevices(void)
 	}
 	else
 	{
-		printf(" (no devices found)\n");
+		fprintf(stderr, " (no devices found)\n");
 	}
 
-	printf("\n");
+	fprintf(stderr, "\n");
 	if (devlist)
 		ftdi_list_free(&devlist);
 	if (ftdi)
@@ -993,12 +993,12 @@ void ListDevices(void)
         #if defined(WIN32)
 	for (i = 0; i < num_devices; i++)
 	{
-		printf(" %c%2d %s - %-40.40s #%s\n", dev_info[i].Type == FT_DEVICE_X_SERIES ? '*' : ' ', i,
+		fprintf(stderr, " %c%2d %s - %-40.40s #%s\n", dev_info[i].Type == FT_DEVICE_X_SERIES ? '*' : ' ', i,
 			dev_info[i].Type <= FT_DEVICE_X_SERIES ? FTDI_Type[dev_info[i].Type] : "FTDI-??   ", 
 			dev_info[i].Description, 
 			dev_info[i].SerialNumber); 
 	}
-	printf("\n");
+	fprintf(stderr, "\n");
 	#endif
 }
 #endif
@@ -1029,18 +1029,18 @@ void ListDevices(void)
 		// TerminateApp();
 	}
 
-	printf("Available FTDI devices:  (with * next to possible FleaFPGA devices)\n");
+	fprintf(stderr, "Available FTDI devices:  (with * next to possible FleaFPGA devices)\n");
 	FT_CHECK(FT_CreateDeviceInfoList(&num_devices));
 
 	if (ftdi_status != FT_OK)
 	{
-		printf("\nError: Can't list devices (error #%d)\n", (int) ftdi_status);
+		fprintf(stderr, "\nError: Can't list devices (error #%d)\n", (int) ftdi_status);
 		return;
 	}
 
 	if (num_devices == 0)
 	{
-		printf(" (no devices found)\n");
+		fprintf(stderr, " (no devices found)\n");
 		return;
 	}
 
@@ -1048,25 +1048,25 @@ void ListDevices(void)
 
 	if (!dev_info)
 	{
-		printf("\nError: Can't allocate memory for %d devices.\n", (int) num_devices);
+		fprintf(stderr, "\nError: Can't allocate memory for %d devices.\n", (int) num_devices);
 		return;
 	}
 
 	FT_CHECK(FT_GetDeviceInfoList(dev_info, &num_devices));
 	if (ftdi_status != FT_OK)
 	{
-		printf("\nError: Get get device list (error #%d)\n", (int) ftdi_status);
+		fprintf(stderr, "\nError: Get get device list (error #%d)\n", (int) ftdi_status);
 		return;
 	}
 
 	for (i = 0; i < num_devices; i++)
 	{
-		printf(" %c%2d %s - %-40.40s #%s\n", dev_info[i].Type == FT_DEVICE_X_SERIES ? '*' : ' ', i,
+		fprintf(stderr, " %c%2d %s - %-40.40s #%s\n", dev_info[i].Type == FT_DEVICE_X_SERIES ? '*' : ' ', i,
 			dev_info[i].Type <= FT_DEVICE_X_SERIES ? FTDI_Type[dev_info[i].Type] : "FTDI-??   ", 
 			dev_info[i].Description, 
 			dev_info[i].SerialNumber); 
 	}
-	printf("\n");
+	fprintf(stderr, "\n");
 }
 #endif
 
@@ -1093,7 +1093,7 @@ void closeJTAGDevice(void)
 		FT_CHECK(FT_SetBitMode(ftdi, ABBM_IO, FT_BITMODE_ASYNC_BITBANG));
 		FT_CHECK_WRITE(ftdi, &def_handshake, 1, written);
 		if (written != 1)
-			printf("%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
+			fprintf(stderr, "%s(%d): short FT_Write result (%d vs %d)?\n", __FUNCTION__, __LINE__, (int32_t)written, 1);
 		FT_CHECK(FT_SetBitMode(ftdi, 0, FT_BITMODE_CBUS_BITBANG));	// leave all as inputs
 		Sleep(1);
 		FT_CHECK(FT_ResetPort(ftdi));
@@ -1113,11 +1113,11 @@ int32_t openJTAGDevice(void)
 
 	if ((ftdi = ftdi_new()) == 0)
 	{
-		printf("\nError: FATAL: ftdi_new failed.\n");
+		fprintf(stderr, "\nError: FATAL: ftdi_new failed.\n");
 		return -1;
 	}
 
-	printf("Searching for FleaFPGA...");
+	fprintf(stderr, "Searching for FleaFPGA...");
 	fflush(stdout);
 	for (i = 0; i < (gSpecifiedDevice ?  1 : sizeof (FleaFPGA_Desc) / sizeof (FleaFPGA_Desc[0])); i++)
 	{
@@ -1138,10 +1138,10 @@ int32_t openJTAGDevice(void)
 
 	if (ftdi_status != FT_OK)
 	{
-		printf("not found (see -m or -l option, open returned %d: %s).\n", (int32_t)ftdi_status, ftdi_get_error_string(ftdi));
+		fprintf(stderr, "not found (see -m or -l option, open returned %d: %s).\n", (int32_t)ftdi_status, ftdi_get_error_string(ftdi));
 
 		if (ftdi_status == -4)
-			printf("\nDo you have permissions (perhaps you need \"sudo\")?\n");
+			fprintf(stderr, "\nDo you have permissions (perhaps you need \"sudo\")?\n");
 
 		return -1;
 	}
@@ -1157,7 +1157,7 @@ int32_t openJTAGDevice(void)
 				libusb_get_string_descriptor_ascii(ftdi->usb_dev, usb_desc.iSerialNumber, serial_num, 9);
 			}
 		}
-		printf("found %s #%s\n", FleaFPGA_Desc[i], serial_num);
+		fprintf(stderr, "found %s #%s\n", FleaFPGA_Desc[i], serial_num);
 		gJTAGMode = FleaFPGA_Mode[i];
 		fflush(stdout);
 	}
@@ -1175,7 +1175,7 @@ int32_t openJTAGDevice(void)
 		// TerminateApp();
 	}
 		
-	printf("Searching for FleaFPGA...");
+	fprintf(stderr, "Searching for FleaFPGA...");
 	fflush(stdout);
 	for (i = 0; i < (gSpecifiedDevice ?  1 : sizeof (FleaFPGA_Desc) / sizeof (FleaFPGA_Desc[0])); i++)
 	{
@@ -1189,11 +1189,11 @@ int32_t openJTAGDevice(void)
 
 	if (ftdi_status != FT_OK || ftdi == 0)
 	{
-		printf("not found (see -m or -l option).\n");
+		fprintf(stderr, "not found (see -m or -l option).\n");
 		return -1;
 	}
 
-	printf("found %s\n", FleaFPGA_Desc[i]);
+	fprintf(stderr, "found %s\n", FleaFPGA_Desc[i]);
 	gJTAGMode = FleaFPGA_Mode[i];
 	fflush(stdout);
 	atexit(closeJTAGDevice);
@@ -1201,7 +1201,7 @@ int32_t openJTAGDevice(void)
 	if (FT_ResetPort(ftdi) != FT_OK)
 	{
 		closeJTAGDevice();
-		printf("FTDI ResetPort failed: Check cable, connection and FTDI driver.\n");
+		fprintf(stderr, "FTDI ResetPort failed: Check cable, connection and FTDI driver.\n");
 		return -1;
 	}
 	#endif
@@ -1251,12 +1251,12 @@ int BenchmarkUSB(void)
 // initialize FT230X EEPROM for FleaFPGA use
 int32_t InitFleaFPGA()
 {
-	printf("Not supported using libftdi1.2 (yet)...");
+	fprintf(stderr, "Not supported using libftdi1.2 (yet)...");
 	fflush(stdout);
 
 	return 0;
 #if 0
-	printf("Searching for FT230X to initialize...");
+	fprintf(stderr, "Searching for FT230X to initialize...");
 	fflush(stdout);
 //	if (FleaFPGA_Desc[i][0] == '#')
 //		ftdi_status = FT_OpenEx(&FleaFPGA_Desc[i][1], FT_OPEN_BY_SERIAL_NUMBER, &ftdi);
@@ -1265,11 +1265,11 @@ int32_t InitFleaFPGA()
 
 	if (ftdi_status != FT_OK || ftdi == 0)
 	{
-		printf("not found (see -m or -l option).\n");
+		fprintf(stderr, "not found (see -m or -l option).\n");
 		exit(5);
 	}
 
-	printf("found %s\n", FleaFPGA_Desc[i]);
+	fprintf(stderr, "found %s\n", FleaFPGA_Desc[i]);
 	fflush(stdout);
 
 	atexit(closeJTAGDevice);
@@ -1277,14 +1277,14 @@ int32_t InitFleaFPGA()
 //	if (FT_ResetPort(ftdi) != FT_OK)
 //	{
 //		closeJTAGDevice();
-//		printf("FTDI ResetPort failed: Check cable, connection and FTDI driver.\n");
+//		fprintf(stderr, "FTDI ResetPort failed: Check cable, connection and FTDI driver.\n");
 //		return -1;
 //	}
 
 	if (gJTAGMode == JTAG_NONE)
 		return 0;
 
-	printf("Reading FT230X EEPROM and configuration data...\n");
+	fprintf(stderr, "Reading FT230X EEPROM and configuration data...\n");
 
 	char Manufacturer[64] = { 0 };
 	char ManufacturerId[64] = { 0 };
@@ -1300,30 +1300,30 @@ int32_t InitFleaFPGA()
 
 //	if (ftdi_status == FT_OK)
 //	{
-//		printf("Manufacturer: \"%s\"\n", Manufacturer);
-//		printf("Description : \"%s\"\n", Description);
-//		printf("Serial #%s   Manufacturer ID: %s\n", SerialNumber, ManufacturerId); 
+//		fprintf(stderr, "Manufacturer: \"%s\"\n", Manufacturer);
+//		fprintf(stderr, "Description : \"%s\"\n", Description);
+//		fprintf(stderr, "Serial #%s   Manufacturer ID: %s\n", SerialNumber, ManufacturerId);
 
 //		uint8_t *rawdata = (uint8_t *)&ft230x_eeprom;
 //		for (i = 0; i < sizeof (ft230x_eeprom); i+=16)
 //		{
-//			printf("%02x:", i);
+//			fprintf(stderr, "%02x:", i);
 //			int b;
 //			for (b = 0; b < 16; b++)
 //			{
-//				printf(" %02x", rawdata[i+b]);
+//				fprintf(stderr, " %02x", rawdata[i+b]);
 //			}
-//			printf(" ");
+//			fprintf(stderr, " ");
 //			for (b = 0; b < 16; b++)
 //			{
-//				printf("%c", rawdata[i+b] >= ' ' && rawdata[i+b] <= '~' ? rawdata[i+b] : '.');
+//				fprintf(stderr, "%c", rawdata[i+b] >= ' ' && rawdata[i+b] <= '~' ? rawdata[i+b] : '.');
 //			}
-//			printf("\n");
+//			fprintf(stderr, "\n");
 //		}
-//		printf("\n");
+//		fprintf(stderr, "\n");
 //	}
 
-	printf("Programming FT230X EEPROM with FleaFPGA settings...\n");
+	fprintf(stderr, "Programming FT230X EEPROM with FleaFPGA settings...\n");
 
 //	strcpy(Manufacturer, "FleaSystems");
 //	strcpy(Description, "FleaFPGA v2.5");
@@ -1338,7 +1338,7 @@ int32_t InitFleaFPGA()
 
 //	if (ftdi_status == FT_OK)
 //	{
-//		printf("Completed, cycling USB port...\n");
+//		fprintf(stderr, "Completed, cycling USB port...\n");
 //
 //		FT_CyclePort(ftdi);
 //		Sleep(10000);
