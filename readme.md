@@ -2,6 +2,7 @@
 
 Original linux version of FleaFPGA-JTAG is patched by EMARD
 to work with FT231X and Lattice ECP5 FPGA.
+
 On [ULX3S](https://github.com/emard/ulx3s) boards it
 uploads 1MB bitstream.vme file in about 22 seconds.
 
