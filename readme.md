@@ -1,8 +1,18 @@
 # FleaFPGA-JTAG utility for ULX3S
 
 Original linux version of FleaFPGA-JTAG is patched by EMARD
-to work with FT231X and Lattice ECP5 FPGA. On ULX3S boards it
+to work with FT231X and Lattice ECP5 FPGA.
+
+On [ULX3S](https://github.com/emard/ulx3s) boards it
 uploads 1MB bitstream.vme file in about 22 seconds.
+
+It should also support [FleaFPGA Ohm](https://www.fleasystems.com/fleaFPGA_Ohm.html) and
+[FleaFPGA Uno](https://www.fleasystems.com/fleaFPGA_Uno.html) boards.
+
+Active source is [FleaFPGA-JTAG-linux](FleaFPGA-JTAG-linux), contains 
+"makefile" rules to compile for linux and win32.
+
+Obsolete win32-only source is [FleaFPGA-JTAG-win32](FleaFPGA-JTAG-win32).
 
 Original readme follows:
 
